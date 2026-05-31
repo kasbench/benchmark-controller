@@ -1,0 +1,146 @@
+ami_ids = {
+  "amd64" = "ami-0e9bb5aa03403fb04"
+  "arm64" = "ami-03647711f14b625b8"
+}
+benchmark_runner = {
+  "ami_id" = "ami-0e9bb5aa03403fb04"
+  "architecture" = "amd64"
+  "instance_id" = "i-06350b695b043ead2"
+  "instance_type" = "t3.small"
+  "private_ip" = "10.0.1.156"
+  "public_ip" = "174.129.166.9"
+  "root_volume_id" = "vol-0ce3692555e86e8d9"
+  "subnet_id" = "subnet-0ea11172485b39b3a"
+}
+control_plane = {
+  "ami_id" = "ami-0e9bb5aa03403fb04"
+  "architecture" = "amd64"
+  "instance_id" = "i-0ba502902d8407d74"
+  "instance_type" = "t3.small"
+  "private_ip" = "10.0.2.206"
+  "root_volume_id" = "vol-0e86e25bfc75c465f"
+  "subnet_id" = "subnet-0846820aa42aa3232"
+}
+environment_description_paths = {
+  "checksums_path" = "artifacts/trial001//checksums.json"
+  "json_path" = "artifacts/trial001//environment-description.json"
+  "markdown_path" = "artifacts/trial001//environment-description.md"
+}
+environment_profile = "small"
+network = {
+  "igw_id" = "igw-00ed76cca0df0ebce"
+  "nat_gw_id" = "nat-0ea258198eb5992c4"
+  "private_subnet_id" = "subnet-0846820aa42aa3232"
+  "public_subnet_id" = "subnet-0ea11172485b39b3a"
+  "route_table_ids" = {
+    "private" = "rtb-07b0b3227baea9d63"
+    "public" = "rtb-03beabaa1c9f6b296"
+  }
+  "selected_availability_zone" = "us-east-1a"
+  "vpc_id" = "vpc-0a9060c64b5cc3bdf"
+}
+nlb = {
+  "arn" = "arn:aws:elasticloadbalancing:us-east-1:377288663341:loadbalancer/net/kasb-20260531150058220800000013/b35bd70de6ea7606"
+  "dns_name" = "kasb-20260531150058220800000013-b35bd70de6ea7606.elb.us-east-1.amazonaws.com"
+  "listeners" = {
+    "http" = {
+      "port" = 80
+      "protocol" = "TCP"
+    }
+  }
+  "scheme" = "internal"
+  "target_groups" = {
+    "http" = {
+      "arn" = "arn:aws:elasticloadbalancing:us-east-1:377288663341:targetgroup/kasb-20260531150053372000000011/8b4cb5908623b58f"
+      "port" = 30080
+    }
+  }
+}
+provisioning_metadata = {
+  "creation_timestamp" = "2026-05-31T15:00:50Z"
+  "git_commit_hash" = "7bb6d773e62f64ed536f86058b8628cc55bf2af5"
+  "opentofu_version" = ">=1.6.0 (constraint)"
+}
+run_bucket_name = "kasbench-test-20260528-377288663341-us-east-1-an "
+run_id = "trial001"
+security_groups = {
+  "benchmark_runner" = {
+    "id" = "sg-0529205bbb3573d09"
+    "name" = "kasbench-runner-20260531150053370200000010"
+    "rules" = "SSH from bastion only; all egress"
+  }
+  "control_plane" = {
+    "id" = "sg-0c677b76ed4cb8e1f"
+    "name" = "kasbench-cp-2026053115005316540000000d"
+    "rules" = "6443 from workers/runner; 2379-2380 self; 10250 from workers; SSH from bastion"
+  }
+  "nlb" = {
+    "id" = "sg-0420f4a7aeb6ead5e"
+    "name" = "kasbench-nlb-2026053115005320590000000e"
+    "rules" = "TCP from benchmark-runner only"
+  }
+  "worker_node" = {
+    "id" = "sg-06e99f515b6febfef"
+    "name" = "kasbench-worker-2026053115005320700000000f"
+    "rules" = "10250 from CP; 30000-32767 self; 9090/9100 self; SSH from bastion; all egress"
+  }
+}
+ssh_key_pair_name = "kasbench-trial001"
+ssh_private_key_path = <sensitive>
+storage = {
+  "ebs_volumes" = {
+    "etcd" = {
+      "az" = "us-east-1a"
+      "iops" = 3000
+      "size_gib" = 20
+      "throughput" = 125
+      "type" = "gp3"
+      "volume_id" = "vol-03618374286b44b3c"
+      "workload" = "etcd"
+    }
+  }
+  "storage_class_metadata" = {
+    "default_workload_storage" = {
+      "description" = "Default StorageClass for PostgreSQL, Kafka, Prometheus PVCs"
+      "encrypted" = true
+      "fs_type" = "ext4"
+      "volume_type" = "gp3"
+    }
+    "high_iops_storage" = {
+      "description" = "High-IOPS StorageClass for Kafka and PostgreSQL"
+      "encrypted" = true
+      "fs_type" = "ext4"
+      "iops" = 6000
+      "throughput" = 250
+      "volume_type" = "gp3"
+    }
+  }
+}
+worker_nodes = {
+  "amd64" = [
+    {
+      "ami_id" = "ami-0e9bb5aa03403fb04"
+      "architecture" = "amd64"
+      "instance_id" = "i-0ea9111b2ccadc0d4"
+      "instance_type" = "t3.small"
+      "node_group" = "amd64"
+      "node_index" = 0
+      "private_ip" = "10.0.2.116"
+      "root_volume_id" = "vol-0dfbed596376cb3a6"
+      "subnet_id" = "subnet-0846820aa42aa3232"
+    },
+  ]
+  "arm64" = [
+    {
+      "ami_id" = "ami-03647711f14b625b8"
+      "architecture" = "arm64"
+      "instance_id" = "i-0054645812ae7f5a9"
+      "instance_type" = "t4g.small"
+      "node_group" = "arm64"
+      "node_index" = 0
+      "private_ip" = "10.0.2.4"
+      "root_volume_id" = "vol-0f1343cc9b3f284f8"
+      "subnet_id" = "subnet-0846820aa42aa3232"
+    },
+  ]
+}

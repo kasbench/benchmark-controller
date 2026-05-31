@@ -1,0 +1,60 @@
+{
+  "kasbench_environment": {
+    "metadata": {
+      "run_id": "trial001",
+      "environment_profile": "small",
+      "created_at": "2026-05-31T15:03:30Z",
+      "opentofu_version": "detected-at-apply-time",
+      "aws_provider_version": "detected-at-apply-time"
+    },
+    "infrastructure": {
+      "region": "us-east-1",
+      "availability_zone": "us-east-1a",
+      "network": {
+        "vpc": {
+          "id": "vpc-0a9060c64b5cc3bdf",
+          "cidr": "10.0.0.0/16"
+        },
+        "subnets": {
+          "public": {
+            "id": "subnet-0ea11172485b39b3a",
+            "cidr": "10.0.1.0/24"
+          },
+          "private": {
+            "id": "subnet-0846820aa42aa3232",
+            "cidr": "10.0.2.0/24"
+          }
+        },
+        "gateways": {
+          "internet_gateway": "igw-00ed76cca0df0ebce",
+          "nat_gateway": "nat-0ea258198eb5992c4"
+        },
+        "route_tables": {"private":"rtb-07b0b3227baea9d63","public":"rtb-03beabaa1c9f6b296"}
+      },
+      "security": {
+        "security_groups": {"benchmark_runner":{"id":"sg-0529205bbb3573d09","name":"kasbench-runner-20260531150053370200000010","rules":"SSH from bastion only; all egress"},"control_plane":{"id":"sg-0c677b76ed4cb8e1f","name":"kasbench-cp-2026053115005316540000000d","rules":"6443 from workers/runner; 2379-2380 self; 10250 from workers; SSH from bastion"},"nlb":{"id":"sg-0420f4a7aeb6ead5e","name":"kasbench-nlb-2026053115005320590000000e","rules":"TCP from benchmark-runner only"},"worker_node":{"id":"sg-06e99f515b6febfef","name":"kasbench-worker-2026053115005320700000000f","rules":"10250 from CP; 30000-32767 self; 9090/9100 self; SSH from bastion; all egress"}}
+      },
+      "iam": {
+        "roles": {"benchmark_runner":{"profile_name":"kasbench-runner-20260531150050907300000008","role_name":"kasbench-runner-20260531150050572300000002"},"control_plane":{"profile_name":"kasbench-cp-2026053115005093000000000a","role_name":"kasbench-cp-20260531150050572400000004"},"worker_node":{"profile_name":"kasbench-worker-20260531150050916600000009","role_name":"kasbench-worker-20260531150050572500000005"}}
+      },
+      "compute": {
+        "control_plane": {"ami_id":"ami-0e9bb5aa03403fb04","architecture":"amd64","instance_id":"i-0ba502902d8407d74","instance_type":"t3.small","private_ip":"10.0.2.206","root_volume_id":"vol-0e86e25bfc75c465f","subnet_id":"subnet-0846820aa42aa3232"},
+        "worker_nodes": {"amd64":[{"ami_id":"ami-0e9bb5aa03403fb04","architecture":"amd64","instance_id":"i-0ea9111b2ccadc0d4","instance_type":"t3.small","node_group":"amd64","node_index":0,"private_ip":"10.0.2.116","root_volume_id":"vol-0dfbed596376cb3a6","subnet_id":"subnet-0846820aa42aa3232"}],"arm64":[{"ami_id":"ami-03647711f14b625b8","architecture":"arm64","instance_id":"i-0054645812ae7f5a9","instance_type":"t4g.small","node_group":"arm64","node_index":0,"private_ip":"10.0.2.4","root_volume_id":"vol-0f1343cc9b3f284f8","subnet_id":"subnet-0846820aa42aa3232"}]},
+        "benchmark_runner": {"ami_id":"ami-0e9bb5aa03403fb04","architecture":"amd64","instance_id":"i-06350b695b043ead2","instance_type":"t3.small","private_ip":"10.0.1.156","public_ip":"174.129.166.9","root_volume_id":"vol-0ce3692555e86e8d9","subnet_id":"subnet-0ea11172485b39b3a"}
+      },
+      "load_balancer": {"arn":"arn:aws:elasticloadbalancing:us-east-1:377288663341:loadbalancer/net/kasb-20260531150058220800000013/b35bd70de6ea7606","dns_name":"kasb-20260531150058220800000013-b35bd70de6ea7606.elb.us-east-1.amazonaws.com","listeners":{"http":{"port":80,"protocol":"TCP"}},"scheme":"internal","target_groups":{"http":{"arn":"arn:aws:elasticloadbalancing:us-east-1:377288663341:targetgroup/kasb-20260531150053372000000011/8b4cb5908623b58f","port":30080}}},
+      "storage": {
+        "ebs_volumes": {"etcd":{"az":"us-east-1a","iops":3000,"size_gib":20,"throughput":125,"type":"gp3","volume_id":"vol-03618374286b44b3c","workload":"etcd"}},
+        "storage_classes": {"default_workload_storage":{"description":"Default StorageClass for PostgreSQL, Kafka, Prometheus PVCs","encrypted":true,"fs_type":"ext4","volume_type":"gp3"},"high_iops_storage":{"description":"High-IOPS StorageClass for Kafka and PostgreSQL","encrypted":true,"fs_type":"ext4","iops":6000,"throughput":250,"volume_type":"gp3"}}
+      }
+    },
+    "external_dependencies": {
+      "bastion_host": {"instance_id":null,"name":null,"private_ip":null},
+      "run_bucket": "kasbench-test-20260528-377288663341-us-east-1-an ",
+      "artifact_prefixes": {"environment":"environment/","reports":"reports/","trials":"trials/"}
+    },
+    "kubernetes_metadata": "not provided",
+    "observability_metadata": "not provided",
+    "autoscaler_metadata": "not provided"
+  }
+}
