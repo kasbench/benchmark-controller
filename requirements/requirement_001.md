@@ -6,7 +6,7 @@
 - Every benchmark trial creates a new Kubernetes environment in AWS using Open Tofu.  A benchmark run contains at least 7 trials per autoscaler under test.
 - This program, the KASBench Controller, is responsible for orchestrating the benchmark execution.
 - The Benchmark Controller is a command line program.  All operations are controlled via the command line.
-- THe Benchmark Controller will run on the Bastion Host.  See the Overview section below.
+- The Benchmark Controller will run on the Bastion Host.  See the Overview section below.
 - Command line operations include individiual operations, like `build-infrastructure` and `clean`, as well as operations like `run-benchmark` that combine multiple individual operations into a comprehensive workflow.
 - This requirement includes the  `init` and `build-infrastructure` flows.  Other flows will be added in subsequent requirements.
 - As a benchmark, the results of the execution of this controller must be auditable.  The program should be very explicit about reporting each step that was taken and the output, regardless of success or failure.  In the case of failures, the error code and message should be explicitly reported.  Each log entry should begin with a timestamp.  Start and end times should also be reported.
@@ -154,7 +154,7 @@ Data will be stored on the bastion host in the following directory structure.
     - `--working-dir`: This must be a directory previously created through the init process (mandatory).    
     - `--run-identifier`: A text string used to identify this run of the benchmark. Must have been previously initialized (mandatory).
     - `--trial-identifier`: A text string used to identify this trial (mandatory).
-    - `--autoscaler': A text string used to identify the autoscaler under test (mandatory).
+    - `--autoscaler`: A text string used to identify the autoscaler under test (mandatory).
     - `--auto-approve`: If supplied, automatically approve the apply without prompting the user to approve.
     - `--var-file`: a tfvars file to be used with the call to `tofu apply`.  This argument may appear more than once. Optional. 
     -  `--var`: a variable name-value pair (e.g., "environment=production").  This argument may appear more than one. Optional.
