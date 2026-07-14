@@ -11,9 +11,10 @@ import click
 from kasbench_controller.database import DatabaseManager
 from kasbench_controller.exceptions import KasbenchError
 from kasbench_controller.logging import log_dry_run, log_step
-from kasbench_controller.models import RunContext, TrialContext
+from kasbench_controller.models import RunContext, TrialConfig, TrialContext, save_trial_config
 from kasbench_controller.output_parser import parse_tofu_outputs
 from kasbench_controller.repository import RepositoryDownloader
+from kasbench_controller.s3_uploader import S3Uploader
 from kasbench_controller.tofu import TofuRunner
 
 
@@ -22,6 +23,9 @@ from kasbench_controller.tofu import TofuRunner
 @click.option("--run-identifier", required=True, type=str, help="Identifier for this experimental run")
 @click.option("--trial-identifier", required=True, type=str, help="Identifier for this trial")
 @click.option("--autoscaler", required=True, type=str, help="Autoscaler to benchmark")
+@click.option("--aws-region", default="us-east-1", type=str, help="AWS region for infrastructure deployment")
+@click.option("--s3-bucket", required=True, type=str, help="S3 bucket for artifact storage")
+@click.option("--run-duration", required=True, type=int, help="Benchmark run duration in minutes")
 @click.option("--auto-approve", is_flag=True, default=False, help="Skip interactive approval for tofu apply")
 @click.option("--var-file", multiple=True, type=str, help="Var-file arguments for tofu apply")
 @click.option("--var", "variables", multiple=True, type=str, help="Variable arguments for tofu apply")
@@ -34,6 +38,9 @@ def build_infrastructure_cmd(
     run_identifier: str,
     trial_identifier: str,
     autoscaler: str,
+    aws_region: str,
+    s3_bucket: str,
+    run_duration: int,
     auto_approve: bool,
     var_file: tuple[str, ...],
     variables: tuple[str, ...],
@@ -97,6 +104,21 @@ def build_infrastructure_cmd(
                 })
                 log_dry_run(logger, "update_trial_record", {
                     "status": "INIT",
+                })
+                log_dry_run(logger, "s3_upload_trial_artifacts", {
+                    "bucket": s3_bucket,
+                    "region": aws_region,
+                    "run_identifier": run_identifier,
+                    "trial_identifier": trial_identifier,
+                })
+                log_dry_run(logger, "save_trial_config", {
+                    "output_directory": str(trial_ctx.output_directory),
+                    "aws_region": aws_region,
+                    "s3_bucket": s3_bucket,
+                    "run_duration": run_duration,
+                })
+                log_dry_run(logger, "record_infra_end_time", {
+                    "trial_id": "pending",
                 })
             log_step(logger, "build_infrastructure_complete", "success", dry_run=True)
             sys.exit(0)
@@ -252,7 +274,34 @@ def build_infrastructure_cmd(
         log_step(logger, "update_trial_record", "success", trial_id=trial_id,
                  status="INIT", public_ip=public_ip, key_pair_name=key_pair_name)
 
-        # --- Step 15: Exit success ---
+        # --- Step 15: Upload trial artifacts to S3 ---
+        s3 = S3Uploader(bucket=s3_bucket, region=aws_region, dry_run=dry_run)
+        s3.upload_trial_artifacts(trial_ctx, run_identifier, trial_identifier)
+        log_step(logger, "s3_upload_trial_artifacts", "success",
+                 bucket=s3_bucket, region=aws_region)
+
+        # --- Step 16: Build and save trial config ---
+        trial_config = TrialConfig(
+            aws_region=aws_region,
+            s3_bucket=s3_bucket,
+            run_duration=run_duration,
+            benchmark_runner_public_ip=parsed.benchmark_runner_public_ip or "",
+            ssh_key_pair_name=parsed.ssh_key_pair_name or "",
+            control_plane_private_ip=parsed.control_plane_private_ip or "",
+            amd_worker_private_ips=parsed.amd_worker_private_ips,
+            arm_worker_private_ips=parsed.arm_worker_private_ips,
+            globeco_dns=parsed.globeco_dns or "",
+            globeco_port=parsed.globeco_port or 0,
+        )
+        save_trial_config(trial_ctx, trial_config)
+        log_step(logger, "save_trial_config", "success",
+                 path=str(trial_ctx.output_directory / "trial_config.json"))
+
+        # --- Step 17: Record infra end time ---
+        db.record_infra_end_time(trial_id)
+        log_step(logger, "record_infra_end_time", "success", trial_id=trial_id)
+
+        # --- Step 18: Exit success ---
         log_step(logger, "build_infrastructure_complete", "success")
         sys.exit(0)
 

@@ -2,7 +2,15 @@
 
 import click
 
-from kasbench_controller.commands import build_infrastructure, init
+from kasbench_controller.commands import (
+    benchmark_monitor,
+    benchmark_postprocessing,
+    benchmark_start,
+    build_infrastructure,
+    destroy_infrastructure,
+    init,
+    initialize_runner,
+)
 from kasbench_controller.logging import configure_logging
 
 
@@ -20,3 +28,8 @@ def cli(ctx: click.Context, log: str | None, dry_run: bool) -> None:
 
 cli.add_command(init.init_cmd)
 cli.add_command(build_infrastructure.build_infrastructure_cmd)
+cli.add_command(initialize_runner.initialize_runner_cmd)
+cli.add_command(benchmark_start.benchmark_start_cmd)
+cli.add_command(benchmark_monitor.benchmark_monitor_cmd)
+cli.add_command(benchmark_postprocessing.benchmark_postprocessing_cmd)
+cli.add_command(destroy_infrastructure.destroy_infrastructure_cmd)

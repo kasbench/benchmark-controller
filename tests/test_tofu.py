@@ -283,3 +283,86 @@ class TestOutputJson:
     def test_output_json_dry_run(self, dry_runner: TofuRunner) -> None:
         result = dry_runner.output_json()
         assert result == {}
+
+
+class TestDestroy:
+    """TofuRunner.destroy() runs tofu destroy with correct arguments."""
+
+    @patch("kasbench_controller.tofu.subprocess.run")
+    def test_destroy_with_auto_approve(self, mock_run: MagicMock, runner: TofuRunner, working_dir: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="Destroy complete", stderr=""
+        )
+        result = runner.destroy(
+            var_files=["prod.tfvars"],
+            variables=["region=us-east-1"],
+            run_id="trial001",
+            auto_approve=True,
+        )
+        assert result.success is True
+        call_args = mock_run.call_args[0][0]
+        assert call_args[0:2] == ["tofu", "destroy"]
+        assert "-auto-approve" in call_args
+        env_path = str(working_dir / "environments" / "prod.tfvars")
+        assert f"-var-file={env_path}" in call_args
+        assert "-var=region=us-east-1" in call_args
+        assert "-var=run_id=trial001" in call_args
+
+    @patch("kasbench_controller.tofu.subprocess.run")
+    def test_destroy_without_auto_approve(self, mock_run: MagicMock, runner: TofuRunner) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr=""
+        )
+        runner.destroy(
+            var_files=[],
+            variables=[],
+            run_id="trial001",
+            auto_approve=False,
+        )
+        call_args = mock_run.call_args[0][0]
+        assert "-auto-approve" not in call_args
+
+    @patch("kasbench_controller.tofu.subprocess.run")
+    def test_destroy_failure_raises_tofu_error(self, mock_run: MagicMock, runner: TofuRunner) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="destroy failed"
+        )
+        with pytest.raises(TofuError) as exc_info:
+            runner.destroy(var_files=[], variables=[], run_id="t1", auto_approve=True)
+        assert exc_info.value.return_code == 1
+        assert "destroy failed" in exc_info.value.stderr
+
+    def test_destroy_dry_run(self, dry_runner: TofuRunner) -> None:
+        result = dry_runner.destroy(
+            var_files=["env.tfvars"],
+            variables=["x=1"],
+            run_id="trial",
+            auto_approve=True,
+        )
+        assert result.success is True
+        assert result.return_code == 0
+
+    @patch("kasbench_controller.tofu.subprocess.run")
+    def test_destroy_var_args_order(self, mock_run: MagicMock, runner: TofuRunner, working_dir: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr=""
+        )
+        runner.destroy(
+            var_files=["a.tfvars", "b.tfvars"],
+            variables=["key1=val1", "key2=val2"],
+            run_id="myrun",
+            auto_approve=True,
+        )
+        call_args = mock_run.call_args[0][0]
+        # Command prefix
+        assert call_args[0:2] == ["tofu", "destroy"]
+        # var-files come first in order
+        env_dir = working_dir / "environments"
+        assert call_args[2] == f"-var-file={env_dir / 'a.tfvars'}"
+        assert call_args[3] == f"-var-file={env_dir / 'b.tfvars'}"
+        # variables next
+        assert call_args[4] == "-var=key1=val1"
+        assert call_args[5] == "-var=key2=val2"
+        # run_id last before -auto-approve
+        assert call_args[6] == "-var=run_id=myrun"
+        assert call_args[7] == "-auto-approve"

@@ -6,22 +6,22 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
 
 ## Tasks
 
-- [ ] 1. Extend foundational modules (models, exceptions, database)
-  - [ ] 1.1 Extend `models.py` with `TrialConfig` dataclass and enhanced `TofuOutputs`
+- [x] 1. Extend foundational modules (models, exceptions, database)
+  - [x] 1.1 Extend `models.py` with `TrialConfig` dataclass and enhanced `TofuOutputs`
     - Add `control_plane_private_ip: str | None`, `amd_worker_private_ips: list[str]`, `arm_worker_private_ips: list[str]`, `globeco_dns: str | None`, `globeco_port: int | None` fields to `TofuOutputs`
     - Add new `TrialConfig` dataclass with fields: `aws_region`, `s3_bucket`, `run_duration`, `benchmark_runner_public_ip`, `ssh_key_pair_name`, `control_plane_private_ip`, `amd_worker_private_ips`, `arm_worker_private_ips`, `globeco_dns`, `globeco_port`
     - Add `load_trial_config(trial_ctx: TrialContext) -> TrialConfig` helper function that reads `trial_config.json` from `trial_ctx.output_directory` and raises `KasbenchError` if not found
     - Add `save_trial_config(trial_ctx: TrialContext, config: TrialConfig) -> None` helper function that writes `trial_config.json`
     - _Requirements: 1.2, 2.3, 3.3, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1_
 
-  - [ ] 1.2 Add new exception types to `exceptions.py`
+  - [x] 1.2 Add new exception types to `exceptions.py`
     - Add `S3UploadError(KasbenchError)` with `file_path: str` and `stderr: str` attributes
     - Add `SSHError(KasbenchError)` with `command: str`, `stderr: str`, `return_code: int` attributes
     - Add `RunnerAPIError(KasbenchError)` with `endpoint: str`, `status_code: int | None`, `response_body: str` attributes
     - Add `TimeoutError(KasbenchError)` with `operation: str`, `elapsed: float` attributes
     - _Requirements: 4.4, 7.3, 9.2, 10.3, 11.2, 19.6_
 
-  - [ ] 1.3 Add new methods to `DatabaseManager` in `database.py`
+  - [x] 1.3 Add new methods to `DatabaseManager` in `database.py`
     - Add `update_trial_status(trial_id: int, status: str) -> None` — validates against VALID_STATUSES
     - Add `record_benchmark_start_time(trial_id: int) -> None`
     - Add `record_benchmark_end_time(trial_id: int) -> None`
@@ -39,8 +39,8 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Test `get_trial_by_identifiers` with existing and non-existing trials
     - _Requirements: 14.1, 15.3, 25.1, 25.2, 25.3_
 
-- [ ] 2. Enhance output parser
-  - [ ] 2.1 Extend `parse_tofu_outputs` in `output_parser.py` to extract new fields
+- [x] 2. Enhance output parser
+  - [x] 2.1 Extend `parse_tofu_outputs` in `output_parser.py` to extract new fields
     - Extract `control_plane_private_ip` from `output["control_plane"]["value"]["private_ip"]`
     - Extract `amd_worker_private_ips` from `output["worker_nodes"]["value"]["amd64"]` (list of `private_ip` fields)
     - Extract `arm_worker_private_ips` from `output["worker_nodes"]["value"]["arm64"]` (list of `private_ip` fields)
@@ -61,8 +61,8 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Verify `ValidationError` message contains exactly the missing key names and no others
     - **Validates: Requirements 5.6**
 
-- [ ] 3. Implement S3 uploader module
-  - [ ] 3.1 Create `src/kasbench_controller/s3_uploader.py`
+- [x] 3. Implement S3 uploader module
+  - [x] 3.1 Create `src/kasbench_controller/s3_uploader.py`
     - Implement `S3UploadResult` dataclass with `success`, `source_path`, `destination_uri`, `stderr` fields
     - Implement `S3Uploader` class with `__init__(bucket, region, dry_run)`, `upload_file(local_path, s3_key)`, and `upload_trial_artifacts(trial_ctx, run_identifier, trial_identifier)` methods
     - Use `subprocess.run()` calling `aws s3 cp` with `--region` flag
@@ -84,8 +84,8 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Test `S3UploadError` raised on subprocess failure
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 4. Implement SSH executor module
-  - [ ] 4.1 Create `src/kasbench_controller/ssh_executor.py`
+- [x] 4. Implement SSH executor module
+  - [x] 4.1 Create `src/kasbench_controller/ssh_executor.py`
     - Implement `SSHResult` dataclass with `return_code`, `stdout`, `stderr`, `success` fields
     - Implement `SSHExecutor` class with `__init__(host, key_path, user="ubuntu", dry_run=False)` and `execute(command, timeout=120)` method
     - Build SSH command: `ssh -i {key_path} -o StrictHostKeyChecking=no -o ConnectTimeout=10 {user}@{host} "{command}"`
@@ -99,8 +99,8 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Test `SSHError` raised on non-zero return code
     - _Requirements: 7.1, 8.1, 9.1_
 
-- [ ] 5. Implement Runner API client module
-  - [ ] 5.1 Create `src/kasbench_controller/runner_api.py`
+- [x] 5. Implement Runner API client module
+  - [x] 5.1 Create `src/kasbench_controller/runner_api.py`
     - Implement `RunnerAPIClient` class with `__init__(base_url, timeout=30.0)` using `httpx.Client`
     - Implement methods: `health_check()`, `initialize(config)`, `rollout_wait(deployment_name, namespace, timeout)`, `snapshot(phase)`, `start()`, `status()`, `shutdown()`, `export(export_type)`
     - Each method raises `RunnerAPIError` on non-successful HTTP responses with endpoint, status code, and response body details
@@ -125,11 +125,11 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Test `health_check` returns True/False appropriately
     - _Requirements: 10.1, 11.1, 15.1, 18.1_
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Add `destroy` method to `TofuRunner` in `tofu.py`
-  - [ ] 7.1 Implement `TofuRunner.destroy` method
+- [x] 7. Add `destroy` method to `TofuRunner` in `tofu.py`
+  - [x] 7.1 Implement `TofuRunner.destroy` method
     - Add `destroy(var_files, variables, run_id, auto_approve)` method following the `apply` pattern
     - Build command: `tofu destroy` + var args + optional `-auto-approve`
     - Support dry-run mode
@@ -142,23 +142,23 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Test dry-run mode
     - _Requirements: 24.1, 24.2, 24.3_
 
-- [ ] 8. Modify `build-infrastructure` command with new options and S3 upload
-  - [ ] 8.1 Add `--aws-region`, `--s3-bucket`, `--run-duration` options to `build_infrastructure_cmd`
+- [x] 8. Modify `build-infrastructure` command with new options and S3 upload
+  - [x] 8.1 Add `--aws-region`, `--s3-bucket`, `--run-duration` options to `build_infrastructure_cmd`
     - Add `--aws-region` option with default `us-east-1`
     - Add `--s3-bucket` as required option
     - Add `--run-duration` as required integer option
     - Wire new options into the command logic
     - _Requirements: 1.1, 2.1, 2.2, 3.1, 3.2_
 
-  - [ ] 8.2 Add S3 upload step and `trial_config.json` write to `build-infrastructure`
+  - [x] 8.2 Add S3 upload step and `trial_config.json` write to `build-infrastructure`
     - After tofu apply + output parsing, instantiate `S3Uploader` and call `upload_trial_artifacts`
     - After S3 upload, build `TrialConfig` from parsed outputs and new options, then call `save_trial_config`
     - Record `infra_end_time` in the database
     - Update dry-run mode to log the new steps
     - _Requirements: 1.2, 2.3, 3.3, 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 9. Implement `initialize-runner` command
-  - [ ] 9.1 Create `src/kasbench_controller/commands/initialize_runner.py`
+- [x] 9. Implement `initialize-runner` command
+  - [x] 9.1 Create `src/kasbench_controller/commands/initialize_runner.py`
     - Accept `--working-directory`, `--run-identifier`, `--trial-identifier`, `--runner-version` (default `0.2.0`), `--health-timeout` (default 30), `--rollout-timeout` (default 600)
     - Load `trial_config.json` (prerequisite check — exits with error if missing)
     - Look up trial in database via `get_trial_by_identifiers`
@@ -171,12 +171,12 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Support dry-run mode
     - _Requirements: 6.1, 6.2, 7.1, 7.2, 7.3, 8.1, 8.2, 9.1, 9.2, 10.1, 10.2, 10.3, 11.1, 11.2, 12.1, 12.2, 12.3, 13.1, 13.2, 14.1_
 
-  - [ ] 9.2 Register `initialize-runner` command in `cli.py` and `commands/__init__.py`
+  - [x] 9.2 Register `initialize-runner` command in `cli.py` and `commands/__init__.py`
     - Import and add command to CLI group
     - _Requirements: 6.1_
 
-- [ ] 10. Implement `benchmark-start` command
-  - [ ] 10.1 Create `src/kasbench_controller/commands/benchmark_start.py`
+- [x] 10. Implement `benchmark-start` command
+  - [x] 10.1 Create `src/kasbench_controller/commands/benchmark_start.py`
     - Accept `--working-directory`, `--run-identifier`, `--trial-identifier`
     - Load `trial_config.json`
     - Look up trial in database
@@ -186,11 +186,11 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Support dry-run mode
     - _Requirements: 15.1, 15.2, 15.3_
 
-  - [ ] 10.2 Register `benchmark-start` command in `cli.py` and `commands/__init__.py`
+  - [x] 10.2 Register `benchmark-start` command in `cli.py` and `commands/__init__.py`
     - _Requirements: 15.1_
 
-- [ ] 11. Implement `benchmark-monitor` command
-  - [ ] 11.1 Create `src/kasbench_controller/commands/benchmark_monitor.py`
+- [x] 11. Implement `benchmark-monitor` command
+  - [x] 11.1 Create `src/kasbench_controller/commands/benchmark_monitor.py`
     - Accept `--working-directory`, `--run-identifier`, `--trial-identifier`, `--timeout` (minutes), `--interval` (seconds, default 30), `--verbose`
     - Load `trial_config.json`
     - Look up trial in database
@@ -202,11 +202,11 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Support dry-run mode
     - _Requirements: 16.1, 16.2, 16.3, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6_
 
-  - [ ] 11.2 Register `benchmark-monitor` command in `cli.py` and `commands/__init__.py`
+  - [x] 11.2 Register `benchmark-monitor` command in `cli.py` and `commands/__init__.py`
     - _Requirements: 16.1_
 
-- [ ] 12. Implement `benchmark-postprocessing` command
-  - [ ] 12.1 Create `src/kasbench_controller/commands/benchmark_postprocessing.py`
+- [x] 12. Implement `benchmark-postprocessing` command
+  - [x] 12.1 Create `src/kasbench_controller/commands/benchmark_postprocessing.py`
     - Accept `--working-directory`, `--run-identifier`, `--trial-identifier`
     - Load `trial_config.json`
     - Look up trial in database
@@ -217,14 +217,14 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Support dry-run mode
     - _Requirements: 18.1, 18.2, 19.1, 19.2, 19.3, 19.4, 19.5, 19.6, 20.1_
 
-  - [ ] 12.2 Register `benchmark-postprocessing` command in `cli.py` and `commands/__init__.py`
+  - [x] 12.2 Register `benchmark-postprocessing` command in `cli.py` and `commands/__init__.py`
     - _Requirements: 18.1_
 
-- [ ] 13. Checkpoint - Ensure all tests pass
+- [x] 13. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Implement `destroy-infrastructure` command
-  - [ ] 14.1 Create `src/kasbench_controller/commands/destroy_infrastructure.py`
+- [x] 14. Implement `destroy-infrastructure` command
+  - [x] 14.1 Create `src/kasbench_controller/commands/destroy_infrastructure.py`
     - Accept `--working-directory`, `--run-identifier`, `--trial-identifier`, `--auto-approve`, `--var-file` (multiple), `--var` (multiple), `--no-apply`, `--ebs-wait` (default 300 seconds)
     - Load `trial_config.json`
     - Look up trial in database, record `cleanup_start_time`
@@ -236,10 +236,10 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Support dry-run mode
     - _Requirements: 21.1-21.7, 22.1, 22.2, 23.1, 23.2, 24.1, 24.2, 24.3, 24.4, 24.5, 25.1, 25.2, 25.3_
 
-  - [ ] 14.2 Register `destroy-infrastructure` command in `cli.py` and `commands/__init__.py`
+  - [x] 14.2 Register `destroy-infrastructure` command in `cli.py` and `commands/__init__.py`
     - _Requirements: 21.1_
 
-- [ ] 15. Checkpoint - Ensure all tests pass
+- [x] 15. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ]* 16. Write integration tests for lifecycle flows
@@ -259,8 +259,8 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Mock httpx and subprocess, verify shutdown, EBS wait, tofu destroy, database timestamps
     - _Requirements: 22.1, 23.1, 24.1, 25.1, 25.2, 25.3_
 
-- [ ] 17. Update README with new command documentation
-  - [ ] 17.1 Update `README.md` to document all new and modified CLI commands
+- [x] 17. Update README with new command documentation
+  - [x] 17.1 Update `README.md` to document all new and modified CLI commands
     - Document `--aws-region`, `--s3-bucket`, `--run-duration` options for `build-infrastructure`
     - Document `initialize-runner` command and its options
     - Document `benchmark-start` command
@@ -269,7 +269,7 @@ This plan implements the full benchmark lifecycle orchestration for KASBench Con
     - Document `destroy-infrastructure` command and its options
     - _Requirements: 26.1, 26.2, 26.3, 26.4, 26.5, 26.6_
 
-- [ ] 18. Final checkpoint - Ensure all tests pass
+- [x] 18. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

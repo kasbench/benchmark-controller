@@ -128,6 +128,47 @@ class TofuRunner:
 
         return self._run(cmd)
 
+    def destroy(
+        self,
+        var_files: list[str],
+        variables: list[str],
+        run_id: str,
+        auto_approve: bool,
+    ) -> TofuResult:
+        """Run `tofu destroy` with the specified variables.
+
+        Args:
+            var_files: List of var-file paths or filenames.
+            variables: List of variable assignments (key=value).
+            run_id: The run_id variable value (appended last).
+            auto_approve: If True, pass -auto-approve to tofu destroy.
+
+        Returns:
+            TofuResult with the command outcome.
+
+        Raises:
+            TofuError: If the command exits with a non-zero return code.
+        """
+        var_args = self._build_var_args(var_files, variables, run_id)
+        cmd = ["tofu", "destroy"] + var_args
+
+        if auto_approve:
+            cmd.append("-auto-approve")
+
+        if self._dry_run:
+            log_dry_run(
+                self._logger,
+                "tofu destroy",
+                {
+                    "cwd": str(self._working_dir),
+                    "args": var_args,
+                    "auto_approve": auto_approve,
+                },
+            )
+            return TofuResult(return_code=0, stdout="", stderr="", success=True)
+
+        return self._run(cmd)
+
     def output_json(self) -> dict:
         """Run `tofu output -json` and parse the JSON result.
 

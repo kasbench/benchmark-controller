@@ -235,3 +235,236 @@ class DatabaseManager:
                 f"Failed to record infra start time for trial {trial_id} "
                 f"in {self._db_path}: {e}"
             ) from e
+
+    def update_trial_status(self, trial_id: int, status: str) -> None:
+        """Update the status of a trial.
+
+        Validates the status against VALID_STATUSES before updating.
+
+        Args:
+            trial_id: The trial to update.
+            status: The new status value.
+
+        Raises:
+            ValueError: If the status is not in VALID_STATUSES.
+            DatabaseError: If the update operation fails.
+        """
+        if status not in VALID_STATUSES:
+            raise ValueError(
+                f"Invalid status '{status}'. Must be one of: {VALID_STATUSES}"
+            )
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """UPDATE trials
+                       SET status = ?, last_update_time = ?
+                       WHERE trial_id = ?""",
+                    (status, now, trial_id),
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to update status for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def record_benchmark_start_time(self, trial_id: int) -> None:
+        """Record the benchmark start time for a trial.
+
+        Sets benchmark_start_time to the current UTC timestamp.
+
+        Args:
+            trial_id: The trial to update.
+
+        Raises:
+            DatabaseError: If the update operation fails.
+        """
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """UPDATE trials
+                       SET benchmark_start_time = ?, last_update_time = ?
+                       WHERE trial_id = ?""",
+                    (now, now, trial_id),
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to record benchmark start time for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def record_benchmark_end_time(self, trial_id: int) -> None:
+        """Record the benchmark end time for a trial.
+
+        Sets benchmark_end_time to the current UTC timestamp.
+
+        Args:
+            trial_id: The trial to update.
+
+        Raises:
+            DatabaseError: If the update operation fails.
+        """
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """UPDATE trials
+                       SET benchmark_end_time = ?, last_update_time = ?
+                       WHERE trial_id = ?""",
+                    (now, now, trial_id),
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to record benchmark end time for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def record_infra_end_time(self, trial_id: int) -> None:
+        """Record the infrastructure end time for a trial.
+
+        Sets infra_end_time to the current UTC timestamp.
+
+        Args:
+            trial_id: The trial to update.
+
+        Raises:
+            DatabaseError: If the update operation fails.
+        """
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """UPDATE trials
+                       SET infra_end_time = ?, last_update_time = ?
+                       WHERE trial_id = ?""",
+                    (now, now, trial_id),
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to record infra end time for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def record_cleanup_start_time(self, trial_id: int) -> None:
+        """Record the cleanup start time for a trial.
+
+        Sets cleanup_start_time to the current UTC timestamp.
+
+        Args:
+            trial_id: The trial to update.
+
+        Raises:
+            DatabaseError: If the update operation fails.
+        """
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """UPDATE trials
+                       SET cleanup_start_time = ?, last_update_time = ?
+                       WHERE trial_id = ?""",
+                    (now, now, trial_id),
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to record cleanup start time for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def record_cleanup_end_time(self, trial_id: int) -> None:
+        """Record the cleanup end time for a trial.
+
+        Sets cleanup_end_time to the current UTC timestamp.
+
+        Args:
+            trial_id: The trial to update.
+
+        Raises:
+            DatabaseError: If the update operation fails.
+        """
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """UPDATE trials
+                       SET cleanup_end_time = ?, last_update_time = ?
+                       WHERE trial_id = ?""",
+                    (now, now, trial_id),
+                )
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to record cleanup end time for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def insert_event(
+        self,
+        trial_id: int,
+        event_type: str,
+        event_message: str,
+        event_request: str | None = None,
+    ) -> int:
+        """Insert an event record for a trial.
+
+        Args:
+            trial_id: The trial this event belongs to.
+            event_type: The type/category of the event.
+            event_message: A descriptive message for the event.
+            event_request: Optional request payload associated with the event.
+
+        Returns:
+            The generated event_id for the new record.
+
+        Raises:
+            DatabaseError: If the insert operation fails.
+        """
+        try:
+            with self._conn:
+                cursor = self._conn.execute(
+                    """INSERT INTO events
+                       (trial_id, event_type, event_message, event_request)
+                       VALUES (?, ?, ?, ?)""",
+                    (trial_id, event_type, event_message, event_request),
+                )
+                return cursor.lastrowid
+        except sqlite3.Error as e:
+            raise DatabaseError(
+                f"Failed to insert event for trial {trial_id} "
+                f"in {self._db_path}: {e}"
+            ) from e
+
+    def get_trial_by_identifiers(
+        self, run_identifier: str, trial_identifier: str
+    ) -> dict | None:
+        """Look up a trial record by run and trial identifiers.
+
+        Args:
+            run_identifier: The run identifier to search for.
+            trial_identifier: The trial identifier to search for.
+
+        Returns:
+            A dictionary of the trial row if found, or None if no match.
+
+        Raises:
+            DatabaseError: If the query fails.
+        """
+        try:
+            self._conn.row_factory = sqlite3.Row
+            cursor = self._conn.execute(
+                """SELECT * FROM trials
+                   WHERE run_identifier = ? AND trial_identifier = ?
+                   LIMIT 1""",
+                (run_identifier, trial_identifier),
+            )
+            row = cursor.fetchone()
+            # Reset row_factory to default
+            self._conn.row_factory = None
+            if row is None:
+                return None
+            return dict(row)
+        except sqlite3.Error as e:
+            self._conn.row_factory = None
+            raise DatabaseError(
+                f"Failed to get trial by identifiers in {self._db_path}: {e}"
+            ) from e
