@@ -118,7 +118,7 @@ def initialize_runner_cmd(
             trial_ctx.tofu_directory
             / "artifacts"
             / trial_identifier
-            / trial_config.ssh_key_pair_name
+            / "fleet_key.pem"
         )
         ssh = SSHExecutor(
             host=trial_config.benchmark_runner_public_ip,
@@ -166,7 +166,7 @@ def initialize_runner_cmd(
                 raise KasbenchError(
                     f"Failed to copy SSH key to runner host: {scp_result.stderr}"
                 )
-        ssh.execute("chmod 600 /home/ubuntu/.ssh/id_rsa")
+        ssh.execute("chmod 400 /home/ubuntu/.ssh/id_rsa")
         log_step(logger, "prepare_ssh_key", "success",
                  source=str(ssh_key_path), dest="/home/ubuntu/.ssh/id_rsa")
 
