@@ -1,5 +1,6 @@
 """Initialize-runner subcommand - pulls runner image, starts container, and initializes the benchmark."""
 
+import subprocess
 import sys
 import time
 import traceback
@@ -146,7 +147,29 @@ def initialize_runner_cmd(
                 raise
         db.insert_event(trial_id, "docker_network_create", "Created docker network 'kasbench'")
 
-        # --- Step 7: Docker run ---
+        # --- Step 7: Prepare SSH key and run container ---
+        # The runner container uses asyncssh to connect to cluster nodes. It looks
+        # for keys at /root/.ssh/ (standard names like id_rsa). We need to place
+        # the trial SSH private key on the runner host so it's available inside the
+        # container when mounted.
+        # First, copy the trial key to the runner host as ~/.ssh/id_rsa.
+        scp_cmd = [
+            "scp",
+            "-i", str(ssh_key_path),
+            "-o", "StrictHostKeyChecking=no",
+            str(ssh_key_path),
+            f"ubuntu@{trial_config.benchmark_runner_public_ip}:/home/ubuntu/.ssh/id_rsa",
+        ]
+        if not dry_run:
+            scp_result = subprocess.run(scp_cmd, capture_output=True, text=True, timeout=30)
+            if scp_result.returncode != 0:
+                raise KasbenchError(
+                    f"Failed to copy SSH key to runner host: {scp_result.stderr}"
+                )
+        ssh.execute("chmod 600 /home/ubuntu/.ssh/id_rsa")
+        log_step(logger, "prepare_ssh_key", "success",
+                 source=str(ssh_key_path), dest="/home/ubuntu/.ssh/id_rsa")
+
         docker_run_cmd = (
             f"sudo docker run -d --name kasbench-runner --network kasbench "
             f"-p 8080:8080 "
