@@ -29,7 +29,7 @@ Note: the `parse_tofu_outputs` function in `output_parser.py` already parses the
 Add a new flow `initialize-runner` to the CLI that performs the following steps on the Benchmark Runner host:
 
 - This flow is dependent upon the `build-infrastructure` flow.  If `build-infrastructure` has not been run, this flow should exit with an appropriate return code and descriptive error message.
-- Pulls the KASBench runner from Docker Hub by executing the following command (or an equivalent) on the Benchmark Runner host (benchmark_runner_public_ip): `sudo docker pull kasbench/kasbench-runner:0.2.0`.  The IP of the Benchmark Runner is obtained in `output_parser.py`, as is the key-pair name.  The kasbench-runner version number should be configurable.
+- Pulls the KASBench runner from Docker Hub by executing the following command (or an equivalent) on the Benchmark Runner host (benchmark_runner_public_ip): `sudo docker pull kasbench/kasbench-runner:0.2.0`.  The IP of the Benchmark Runner is obtained in `output_parser.py`, as is the key-pair name.  The kasbench-runner version number tag should be configurable.
 - Creates a docker network on the Benchmark Runner host named `kasbench`, using the following command or an equivalent: `sudo docker network create kasbench`.  If the network already exists, fail silently.
 - Run the container on the Benchmark Runner host, using the following command (or an equivalent):
 ```bash
@@ -46,7 +46,7 @@ sudo docker run -d \
   "startTime": null,
   "endTime": null,
   "loadGenerators": []
-}`.  Iterate until the Benchmark Runner is available, up to a configurable timeout (initially set at 30 seconds). Wait 1 second between invocations.
+}`.  Iterate up to a configurable timeout (initially set at 30 seconds). Wait 1 second (configurable) between invocations.
 
 - Initialize the Benchmark Runner using the following command as a guide.
 

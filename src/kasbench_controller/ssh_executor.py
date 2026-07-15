@@ -63,6 +63,7 @@ class SSHExecutor:
         ssh_cmd = [
             "ssh",
             "-i", str(self._key_path),
+            "-A",
             "-o", "StrictHostKeyChecking=no",
             "-o", "ConnectTimeout=10",
             f"{self._user}@{self._host}",
