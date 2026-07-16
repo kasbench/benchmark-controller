@@ -82,17 +82,7 @@ def benchmark_postprocessing_cmd(
         base_url = f"http://{trial_config.benchmark_runner_public_ip}:8080"
         runner = RunnerAPIClient(base_url=base_url)
 
-        # --- Step 4: POST /shutdown ---
-        try:
-            runner.shutdown()
-        except RunnerAPIError as e:
-            raise KasbenchError(
-                f"Shutdown request failed: {e}"
-            ) from e
-        db.insert_event(trial_id, "postprocessing_shutdown", "Shutdown request successful")
-        log_step(logger, "shutdown", "success")
-
-        # --- Step 5: Sequential exports ---
+        # --- Step 4: Sequential exports ---
         for export_type in EXPORT_TYPES:
             try:
                 runner.export(export_type)
@@ -106,6 +96,17 @@ def benchmark_postprocessing_cmd(
                 f"Export '{export_type}' completed successfully",
             )
             log_step(logger, f"export_{export_type}", "success")
+
+       # --- Step 5: POST /shutdown ---
+        try:
+            runner.shutdown()
+        except RunnerAPIError as e:
+            raise KasbenchError(
+                f"Shutdown request failed: {e}"
+            ) from e
+        db.insert_event(trial_id, "postprocessing_shutdown", "Shutdown request successful")
+        log_step(logger, "shutdown", "success")
+
 
         # --- Step 6: Final event and exit ---
         db.insert_event(trial_id, "postprocessing_complete", "All postprocessing steps completed")

@@ -229,19 +229,28 @@ def initialize_runner_cmd(
         db.insert_event(trial_id, "initialize", "Runner initialized successfully")
 
         # --- Step 10: Rollout wait ---
+        # Create a dedicated client with a timeout long enough to let the runner
+        # respond (the runner may block up to 300s waiting on the deployment).
+        rollout_api = RunnerAPIClient(
+            base_url=f"http://{trial_config.benchmark_runner_public_ip}:8080",
+            timeout=360.0,
+        )
+
         rollout_start = time.time()
         rollout_success = False
         while (time.time() - rollout_start) < rollout_timeout:
             try:
-                runner_api.rollout_wait(
+                response = rollout_api.rollout_wait(
                     deployment_name="globeco-confirmation-service",
                     namespace="globeco",
                     timeout=300,
                 )
-                rollout_success = True
-                break
+                if response.status_code == 200:
+                    rollout_success = True
+                    break
             except Exception:
-                time.sleep(1)
+                pass
+            time.sleep(1)
 
         if not rollout_success:
             raise TimeoutError(

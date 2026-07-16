@@ -225,12 +225,12 @@ kasbench benchmark-postprocessing \
 ```
 
 This performs the following steps:
-1. Sends a shutdown request to the Runner API (triggers post-benchmark snapshot)
-2. Exports metrics (`/metrics/export`)
-3. Exports metadata (`/metadata/export`)
-4. Exports TSDB data (`/tsdb/export`)
-5. Exports output files (`/output/export`)
-6. Exports the runner database (`/db/export`)
+1. Exports metrics (`/metrics/export`)
+2. Exports metadata (`/metadata/export`)
+3. Exports TSDB data (`/tsdb/export`)
+4. Exports output files (`/output/export`)
+5. Exports the runner database (`/db/export`)
+6. Sends a shutdown request to the Runner API (triggers post-benchmark snapshot)
 
 If any export step fails, the command exits with an error identifying the failed step.
 
