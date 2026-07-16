@@ -184,7 +184,7 @@ def initialize_runner_cmd(
         # --- Step 8: Health check polling ---
         runner_api = RunnerAPIClient(
             base_url=f"http://{trial_config.benchmark_runner_public_ip}:8080",
-            timeout=10.0,
+            timeout=600.0, # 600 seconds, need to adjust
         )
 
         start_time = time.time()
