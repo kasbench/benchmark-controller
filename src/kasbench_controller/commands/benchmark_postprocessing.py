@@ -82,7 +82,12 @@ def benchmark_postprocessing_cmd(
         base_url = f"http://{trial_config.benchmark_runner_public_ip}:8080"
         runner = RunnerAPIClient(base_url=base_url)
 
-        # --- Step 4: Sequential exports ---
+        # --- Step 4: Post-benchmark snapshot ---
+        runner.snapshot("post")
+        log_step(logger, "snapshot", "success", phase="post")
+        db.insert_event(trial_id, "snapshot", "Post-benchmark snapshot taken")
+
+        # --- Step 5: Sequential exports ---
         for export_type in EXPORT_TYPES:
             try:
                 runner.export(export_type)
@@ -97,7 +102,7 @@ def benchmark_postprocessing_cmd(
             )
             log_step(logger, f"export_{export_type}", "success")
 
-       # --- Step 5: POST /shutdown ---
+       # --- Step 6: POST /shutdown ---
         try:
             runner.shutdown()
         except RunnerAPIError as e:
@@ -108,7 +113,7 @@ def benchmark_postprocessing_cmd(
         log_step(logger, "shutdown", "success")
 
 
-        # --- Step 6: Final event and exit ---
+        # --- Step 7: Final event and exit ---
         db.insert_event(trial_id, "postprocessing_complete", "All postprocessing steps completed")
         log_step(logger, "benchmark_postprocessing_complete", "success")
         sys.exit(0)
