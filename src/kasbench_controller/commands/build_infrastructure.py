@@ -292,6 +292,7 @@ def build_infrastructure_cmd(
             arm_worker_private_ips=parsed.arm_worker_private_ips,
             globeco_dns=parsed.globeco_dns or "",
             globeco_port=parsed.globeco_port or 0,
+            execution_data_fs=parsed.execution_data_fs or "",
         )
         save_trial_config(trial_ctx, trial_config)
         log_step(logger, "save_trial_config", "success",

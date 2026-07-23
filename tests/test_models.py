@@ -89,6 +89,7 @@ class TestTofuOutputs:
             "arm_worker_private_ips": ["10.0.2.4"],
             "globeco_dns": "kasb-xxx.elb.us-east-1.amazonaws.com",
             "globeco_port": 80,
+            "execution_data_fs": "fs-01234567",
             "raw_json": {},
         }
         defaults.update(kwargs)
@@ -157,6 +158,7 @@ class TestTrialConfig:
             "arm_worker_private_ips": ["10.0.2.4"],
             "globeco_dns": "kasb-xxx.elb.us-east-1.amazonaws.com",
             "globeco_port": 80,
+            "execution_data_fs": "fs-01234567",
         }
         defaults.update(kwargs)
         return TrialConfig(**defaults)
@@ -204,6 +206,7 @@ class TestLoadTrialConfig:
             "arm_worker_private_ips": ["10.0.1.3"],
             "globeco_dns": "my-nlb.elb.amazonaws.com",
             "globeco_port": 443,
+            "execution_data_fs": "fs-abcdef01",
         }
         (trial_ctx.output_directory / "trial_config.json").write_text(json.dumps(config_data))
 
@@ -260,6 +263,7 @@ class TestSaveTrialConfig:
             arm_worker_private_ips=["10.0.0.4"],
             globeco_dns="nlb.example.com",
             globeco_port=8080,
+            execution_data_fs="fs-99999999",
         )
 
         save_trial_config(trial_ctx, config)
@@ -291,6 +295,7 @@ class TestSaveTrialConfig:
             arm_worker_private_ips=[],
             globeco_dns="dns.example.com",
             globeco_port=80,
+            execution_data_fs="fs-00000000",
         )
 
         save_trial_config(trial_ctx, config)
@@ -310,6 +315,7 @@ class TestSaveTrialConfig:
             arm_worker_private_ips=["172.16.0.4", "172.16.0.5", "172.16.0.6"],
             globeco_dns="rt-dns.example.com",
             globeco_port=9090,
+            execution_data_fs="fs-roundtrip",
         )
 
         save_trial_config(trial_ctx, config)

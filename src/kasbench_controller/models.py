@@ -54,6 +54,7 @@ class TofuOutputs:
     arm_worker_private_ips: list[str]
     globeco_dns: str | None
     globeco_port: int | None
+    execution_data_fs: str | None
     raw_json: dict
 
 
@@ -71,6 +72,7 @@ class TrialConfig:
     arm_worker_private_ips: list[str]
     globeco_dns: str
     globeco_port: int
+    execution_data_fs: str
 
 
 def load_trial_config(trial_ctx: TrialContext) -> TrialConfig:
@@ -102,6 +104,7 @@ def load_trial_config(trial_ctx: TrialContext) -> TrialConfig:
         arm_worker_private_ips=data["arm_worker_private_ips"],
         globeco_dns=data["globeco_dns"],
         globeco_port=data["globeco_port"],
+        execution_data_fs=data["execution_data_fs"],
     )
 
 
@@ -120,5 +123,6 @@ def save_trial_config(trial_ctx: TrialContext, config: TrialConfig) -> None:
         "arm_worker_private_ips": config.arm_worker_private_ips,
         "globeco_dns": config.globeco_dns,
         "globeco_port": config.globeco_port,
+        "execution_data_fs": config.execution_data_fs,
     }
     config_path.write_text(json.dumps(data, indent=2))

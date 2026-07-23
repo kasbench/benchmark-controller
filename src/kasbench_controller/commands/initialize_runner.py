@@ -219,6 +219,7 @@ def initialize_runner_cmd(
             "runIdentifier": run_identifier,
             "trialIdentifier": trial_identifier,
             "runDurationMinutes": trial_config.run_duration,
+            "executionDataFs": trial_config.execution_data_fs,
             "skipKubernetesInstall": False,
             "skipManifestInstall": False,
             "forceManifestInstall": True,

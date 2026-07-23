@@ -90,6 +90,17 @@ def parse_tofu_outputs(output: dict) -> TofuOutputs:
     except (KeyError, TypeError):
         missing_keys.append("nlb.listeners.http.port")
 
+    # Extract efs_file_system_id
+    execution_data_fs: str | None = None
+    try:
+        value = output["efs_file_system_id"]["value"]
+        if value == "<sensitive>":
+            execution_data_fs = None
+        else:
+            execution_data_fs = value
+    except (KeyError, TypeError):
+        missing_keys.append("efs_file_system_id")
+
     if missing_keys:
         raise ValidationError(
             f"Missing required keys in tofu output: {', '.join(missing_keys)}"
@@ -103,5 +114,6 @@ def parse_tofu_outputs(output: dict) -> TofuOutputs:
         arm_worker_private_ips=arm_worker_private_ips,
         globeco_dns=globeco_dns,
         globeco_port=globeco_port,
+        execution_data_fs=execution_data_fs,
         raw_json=output,
     )

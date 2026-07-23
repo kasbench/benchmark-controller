@@ -31,6 +31,9 @@ def _make_valid_output(**overrides) -> dict:
                 "listeners": {"http": {"port": 80}},
             },
         },
+        "efs_file_system_id": {
+            "value": "fs-0123456789abcdef0",
+        },
     }
     output.update(overrides)
     return output
@@ -307,6 +310,7 @@ class TestMissingKeys:
         assert "worker_nodes.arm64" in error_msg
         assert "nlb.dns_name" in error_msg
         assert "nlb.listeners.http.port" in error_msg
+        assert "efs_file_system_id" in error_msg
 
     def test_missing_value_key_in_benchmark_runner(self):
         output = _make_valid_output(
