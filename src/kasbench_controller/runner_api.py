@@ -148,13 +148,16 @@ class RunnerAPIClient:
         response = self._request("POST", endpoint)
         return response
 
-    def export(self, export_type: str) -> httpx.Response:
+    def export(
+        self, export_type: str, timeout: float | None = None
+    ) -> httpx.Response:
         """Trigger a data export.
 
         POST /{export_type}/export for metrics, metadata, tsdb, output, db.
 
         Args:
             export_type: Type of export (metrics, metadata, tsdb, output, db).
+            timeout: Optional per-request timeout in seconds (overrides client default).
 
         Returns:
             The HTTP response from the runner.
@@ -163,7 +166,7 @@ class RunnerAPIClient:
             RunnerAPIError: If the response status code is not successful.
         """
         endpoint = f"/{export_type}/export"
-        response = self._request("POST", endpoint)
+        response = self._request("POST", endpoint, timeout=timeout)
         return response
 
     def _request(
@@ -171,6 +174,7 @@ class RunnerAPIClient:
         method: str,
         endpoint: str,
         json: dict | None = None,
+        timeout: float | None = None,
     ) -> httpx.Response:
         """Execute an HTTP request and raise on non-successful status.
 
@@ -178,6 +182,7 @@ class RunnerAPIClient:
             method: HTTP method (GET, POST).
             endpoint: API endpoint path.
             json: Optional JSON body.
+            timeout: Optional per-request timeout in seconds (overrides client default).
 
         Returns:
             The HTTP response.
@@ -185,8 +190,11 @@ class RunnerAPIClient:
         Raises:
             RunnerAPIError: If the response status code indicates failure.
         """
+        kwargs: dict = {"json": json} if json is not None else {}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
         try:
-            response = self._client.request(method, endpoint, json=json)
+            response = self._client.request(method, endpoint, **kwargs)
         except httpx.HTTPError as exc:
             raise RunnerAPIError(
                 message=f"HTTP request failed for {endpoint}: {exc}",

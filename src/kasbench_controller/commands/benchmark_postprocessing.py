@@ -91,7 +91,7 @@ def benchmark_postprocessing_cmd(
         # --- Step 5: Sequential exports ---
         for export_type in EXPORT_TYPES:
             try:
-                runner.export(export_type)
+                runner.export(export_type, timeout=180.0)
             except RunnerAPIError as e:
                 raise KasbenchError(
                     f"Export failed for '{export_type}': {e}"
