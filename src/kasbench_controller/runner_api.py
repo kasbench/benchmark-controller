@@ -186,7 +186,7 @@ class RunnerAPIClient:
             RunnerAPIError: If the response status code indicates failure.
         """
         try:
-            response = self._client.request(method, endpoint, json=json)
+            response = self._client.request(method, endpoint, json=json, timeout=30.0)
         except httpx.HTTPError as exc:
             raise RunnerAPIError(
                 message=f"HTTP request failed for {endpoint}: {exc}",

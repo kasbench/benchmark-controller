@@ -13,7 +13,7 @@ from kasbench_controller.models import RunContext, TrialContext, load_trial_conf
 from kasbench_controller.runner_api import RunnerAPIClient
 
 
-EXPORT_TYPES = ["metrics", "metadata", "prometheus/tsdb", "output", "db"]
+EXPORT_TYPES = ["metrics", "metadata", "prometheus/tsdb", "output", "db", "roundtrip"]
 
 
 @click.command("benchmark-postprocessing")
@@ -59,6 +59,7 @@ def benchmark_postprocessing_cmd(
                 log_dry_run(logger, f"export_{export_type}", {
                     "endpoint": f"/{export_type}/export",
                 })
+
             log_step(logger, "benchmark_postprocessing_complete", "success", dry_run=True)
             sys.exit(0)
 
