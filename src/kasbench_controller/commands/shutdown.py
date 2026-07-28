@@ -1,4 +1,4 @@
-"""Benchmark-postprocessing subcommand - triggers shutdown and sequential data exports."""
+"""Shutdown subcommand - sends a shutdown request to the Runner API."""
 
 import sys
 import traceback
@@ -13,21 +13,18 @@ from kasbench_controller.models import RunContext, TrialContext, load_trial_conf
 from kasbench_controller.runner_api import RunnerAPIClient
 
 
-EXPORT_TYPES = ["metrics", "metadata", "prometheus/tsdb", "output", "db", "roundtrip"]
-
-
-@click.command("benchmark-postprocessing")
+@click.command("shutdown")
 @click.option("--working-directory", required=True, type=click.Path(), help="Top-level working directory")
 @click.option("--run-identifier", required=True, type=str, help="Identifier for this experimental run")
 @click.option("--trial-identifier", required=True, type=str, help="Identifier for this trial")
 @click.pass_context
-def benchmark_postprocessing_cmd(
+def shutdown_cmd(
     ctx: click.Context,
     working_directory: str,
     run_identifier: str,
     trial_identifier: str,
 ) -> None:
-    """Trigger shutdown and export benchmark artifacts via the Runner API."""
+    """Send a shutdown request to the Runner API."""
     logger = ctx.obj["logger"]
     dry_run = ctx.obj["dry_run"]
 
@@ -40,7 +37,7 @@ def benchmark_postprocessing_cmd(
         trial_ctx = TrialContext(
             run_context=run_ctx,
             trial_identifier=trial_identifier,
-            autoscaler="",  # not needed for postprocessing
+            autoscaler="",  # not needed for shutdown
         )
 
         # --- Dry-run mode ---
@@ -52,12 +49,10 @@ def benchmark_postprocessing_cmd(
                 "run_identifier": run_identifier,
                 "trial_identifier": trial_identifier,
             })
-            for export_type in EXPORT_TYPES:
-                log_dry_run(logger, f"export_{export_type}", {
-                    "endpoint": f"/{export_type}/export",
-                })
-
-            log_step(logger, "benchmark_postprocessing_complete", "success", dry_run=True)
+            log_dry_run(logger, "shutdown", {
+                "endpoint": "/shutdown",
+            })
+            log_step(logger, "shutdown_complete", "success", dry_run=True)
             sys.exit(0)
 
         # --- Step 1: Load trial config (prerequisite check) ---
@@ -80,33 +75,19 @@ def benchmark_postprocessing_cmd(
         base_url = f"http://{trial_config.benchmark_runner_public_ip}:8080"
         runner = RunnerAPIClient(base_url=base_url)
 
-        # --- Step 4: Post-benchmark snapshot ---
-        runner.snapshot("post")
-        log_step(logger, "snapshot", "success", phase="post")
-        db.insert_event(trial_id, "snapshot", "Post-benchmark snapshot taken")
-
-        # --- Step 5: Sequential exports ---
-        for export_type in EXPORT_TYPES:
-            try:
-                runner.export(export_type, timeout=180.0)
-            except RunnerAPIError as e:
-                raise KasbenchError(
-                    f"Export failed for '{export_type}': {e}"
-                ) from e
-            db.insert_event(
-                trial_id,
-                f"postprocessing_export_{export_type}",
-                f"Export '{export_type}' completed successfully",
-            )
-            log_step(logger, f"export_{export_type}", "success")
-
-        # --- Step 6: Final event and exit ---
-        db.insert_event(trial_id, "postprocessing_complete", "All postprocessing steps completed")
-        log_step(logger, "benchmark_postprocessing_complete", "success")
+        # --- Step 4: POST /shutdown ---
+        try:
+            runner.shutdown()
+        except RunnerAPIError as e:
+            raise KasbenchError(
+                f"Shutdown request failed: {e}"
+            ) from e
+        db.insert_event(trial_id, "shutdown", "Shutdown request successful")
+        log_step(logger, "shutdown", "success")
         sys.exit(0)
 
     except KasbenchError as e:
-        log_step(logger, "benchmark_postprocessing_failed", "failure",
+        log_step(logger, "shutdown_failed", "failure",
                  error=str(e), context=e.__class__.__name__)
         sys.exit(1)
     except Exception as e:

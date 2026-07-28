@@ -20,6 +20,7 @@ Bastion Host (Controller)
     ├── kasbench benchmark-start         → Triggers load generation
     ├── kasbench benchmark-monitor       → Polls status until benchmark completes
     ├── kasbench benchmark-postprocessing → Exports artifacts to S3
+    ├── kasbench shutdown                → Shuts down the Runner API
     └── kasbench destroy-infrastructure  → Tears down all AWS resources
 ```
 
@@ -215,7 +216,7 @@ Polls `GET /status` on the Runner API at the configured interval. Exits when the
 
 ### Benchmark Postprocessing
 
-Trigger shutdown and export all benchmark artifacts to S3:
+Export all benchmark artifacts via the Runner API:
 
 ```bash
 kasbench benchmark-postprocessing \
@@ -225,14 +226,35 @@ kasbench benchmark-postprocessing \
 ```
 
 This performs the following steps:
-1. Exports metrics (`/metrics/export`)
-2. Exports metadata (`/metadata/export`)
-3. Exports TSDB data (`/tsdb/export`)
-4. Exports output files (`/output/export`)
-5. Exports the runner database (`/db/export`)
-6. Sends a shutdown request to the Runner API (triggers post-benchmark snapshot)
+1. Takes a post-benchmark snapshot
+2. Exports metrics (`/metrics/export`)
+3. Exports metadata (`/metadata/export`)
+4. Exports TSDB data (`/tsdb/export`)
+5. Exports output files (`/output/export`)
+6. Exports the runner database (`/db/export`)
 
 If any export step fails, the command exits with an error identifying the failed step.
+
+**Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--working-directory` | Yes | Top-level directory for all benchmark data |
+| `--run-identifier` | Yes | Name of the experimental run |
+| `--trial-identifier` | Yes | Name of the trial within the run |
+
+### Shutdown
+
+Send a shutdown request to the Runner API:
+
+```bash
+kasbench shutdown \
+  --working-directory /data/benchmarks \
+  --run-identifier run001 \
+  --trial-identifier trial001
+```
+
+Sends a `POST /shutdown` request to the Runner API to gracefully shut down the benchmark runner container.
 
 **Options:**
 
@@ -362,6 +384,7 @@ src/kasbench_controller/
 │   ├── benchmark_start.py       # benchmark-start subcommand
 │   ├── benchmark_monitor.py     # benchmark-monitor subcommand
 │   ├── benchmark_postprocessing.py  # benchmark-postprocessing subcommand
+│   ├── shutdown.py              # shutdown subcommand
 │   └── destroy_infrastructure.py    # destroy-infrastructure subcommand
 ├── database.py             # SQLite schema and operations
 ├── tofu.py                 # Open Tofu subprocess wrapper
