@@ -180,6 +180,27 @@ kasbench benchmark-start \
 
 Sends a `POST /start` request to the Runner API to begin the benchmark. Records the benchmark start time in the database.
 
+You can optionally override the benchmark duration and per-role load generation parameters:
+
+```bash
+kasbench benchmark-start \
+  --working-directory /data/benchmarks \
+  --run-identifier run001 \
+  --trial-identifier trial001 \
+  --benchmark-length-minutes 15 \
+  --role-params '{"trader":{"baseLoadIntensity":50,"baseDelayPercentage":60,"spawnRate":5},"investor":{"baseLoadIntensity":20,"baseDelayPercentage":80,"spawnRate":2}}'
+```
+
+When `--benchmark-length-minutes` is omitted, the Runner uses the `runDurationMinutes` value from `/initialize`. When `--role-params` is omitted (or a role is not included in the JSON), the Runner applies its built-in defaults:
+
+| Role | baseLoadIntensity | baseDelayPercentage | spawnRate |
+|------|-------------------|---------------------|-----------|
+| `back-office` | 100 | 80 | 10 |
+| `portfolio-manager` | 100 | 80 | 10 |
+| `trader` | 100 | 80 | 10 |
+| `investor` | 10 | 80 | 10 |
+| `it-operations` | 100 | 100 | 1 |
+
 **Options:**
 
 | Option | Required | Description |
@@ -187,6 +208,8 @@ Sends a `POST /start` request to the Runner API to begin the benchmark. Records 
 | `--working-directory` | Yes | Top-level directory for all benchmark data |
 | `--run-identifier` | Yes | Name of the experimental run |
 | `--trial-identifier` | Yes | Name of the trial within the run |
+| `--benchmark-length-minutes` | No | Override benchmark duration in minutes (>=1). Defaults to the value from `/initialize`. |
+| `--role-params` | No | Per-role load generation overrides as a JSON string. Each role value must include `baseLoadIntensity`, `baseDelayPercentage`, and `spawnRate`. |
 
 ### Benchmark Monitor
 

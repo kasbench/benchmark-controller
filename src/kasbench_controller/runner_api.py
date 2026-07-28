@@ -103,10 +103,20 @@ class RunnerAPIClient:
         response = self._request("POST", endpoint, json={"phase": phase})
         return response
 
-    def start(self) -> httpx.Response:
+    def start(
+        self,
+        benchmark_length_minutes: int | None = None,
+        role_params: dict | None = None,
+    ) -> httpx.Response:
         """Start the benchmark load generation.
 
-        POST /start with empty JSON body.
+        POST /start with optional benchmark parameters.
+
+        Args:
+            benchmark_length_minutes: Override benchmark duration in minutes (>=1).
+            role_params: Per-role load generation parameter overrides. Keys are
+                role names; values are dicts with baseLoadIntensity,
+                baseDelayPercentage, and spawnRate.
 
         Returns:
             The HTTP response from the runner.
@@ -115,7 +125,12 @@ class RunnerAPIClient:
             RunnerAPIError: If the response status code is not successful.
         """
         endpoint = "/start"
-        response = self._request("POST", endpoint, json={})
+        body: dict = {}
+        if benchmark_length_minutes is not None:
+            body["benchmarkLengthMinutes"] = benchmark_length_minutes
+        if role_params is not None:
+            body["roleParams"] = role_params
+        response = self._request("POST", endpoint, json=body)
         return response
 
     def status(self) -> httpx.Response:
