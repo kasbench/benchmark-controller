@@ -165,6 +165,7 @@ This performs the following steps:
 | `--runner-version` | No | KASBench Runner Docker image version (default: `0.2.0`) |
 | `--health-timeout` | No | Health check polling timeout in seconds (default: `30`) |
 | `--rollout-timeout` | No | Rollout wait timeout in seconds (default: `600`) |
+| `--cluster-cidr-range` | No | Pod network CIDR to pass to the Runner (e.g. `10.244.0.0/16`). If omitted, the Runner uses its default. |
 
 ### Benchmark Start
 

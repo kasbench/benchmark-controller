@@ -23,6 +23,7 @@ from kasbench_controller.ssh_executor import SSHExecutor
 @click.option("--runner-version", default="0.2.0", type=str, help="KASBench Runner Docker image version")
 @click.option("--health-timeout", default=30, type=int, help="Health check polling timeout in seconds")
 @click.option("--rollout-timeout", default=600, type=int, help="Rollout wait timeout in seconds")
+@click.option("--cluster-cidr-range", default=None, type=str, help="Pod network CIDR to pass to the Runner (e.g. 10.244.0.0/16)")
 @click.pass_context
 def initialize_runner_cmd(
     ctx: click.Context,
@@ -32,6 +33,7 @@ def initialize_runner_cmd(
     runner_version: str,
     health_timeout: int,
     rollout_timeout: int,
+    cluster_cidr_range: str | None,
 ) -> None:
     """Initialize the KASBench Runner on the benchmark host."""
     logger = ctx.obj["logger"]
@@ -224,6 +226,9 @@ def initialize_runner_cmd(
             "skipManifestInstall": False,
             "forceManifestInstall": True,
         }
+
+        if cluster_cidr_range is not None:
+            initialize_body["clusterCidrRange"] = cluster_cidr_range
 
         runner_api.initialize(initialize_body)
         log_step(logger, "initialize_runner", "success", endpoint="/initialize")
