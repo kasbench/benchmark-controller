@@ -1,0 +1,459 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create `src/kasbench_controller/experiment/config.py` with ExperimentConfig dataclass": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275682
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428283782
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445782013
+      }
+    ],
+    "1.2 Create `src/kasbench_controller/experiment/__init__.py` and `src/kasbench_controller/experiment/models.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275790
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428284724
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445783018
+      }
+    ],
+    "2.1 Create `src/kasbench_controller/experiment/scheduler.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275833
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445789292
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445909013
+      }
+    ],
+    "3. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275869
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445920787
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445961258
+      }
+    ],
+    "4.1 Create `src/kasbench_controller/experiment/progress.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275903
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445981526
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446254984
+      }
+    ],
+    "5.1 Create `src/kasbench_controller/services/__init__.py` and extract `run_init` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275930
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445982413
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446256068
+      }
+    ],
+    "5.2 Extract `run_build_infrastructure` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275951
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446264170
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446393445
+      }
+    ],
+    "5.3 Extract `run_initialize_runner` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428275978
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446265240
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446394225
+      }
+    ],
+    "5.4 Extract `run_benchmark_start` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276000
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446266130
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446395023
+      }
+    ],
+    "5.5 Extract `run_benchmark_monitor` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276023
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446398873
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446523300
+      }
+    ],
+    "5.6 Extract `run_benchmark_postprocessing` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276047
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446399836
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446524167
+      }
+    ],
+    "5.7 Extract `run_shutdown` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276077
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446400642
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446524857
+      }
+    ],
+    "5.8 Extract `run_destroy_infrastructure` service": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276101
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446401604
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446525717
+      }
+    ],
+    "6. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276129
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446530538
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446551391
+      }
+    ],
+    "7.1 Create `src/kasbench_controller/experiment/abort.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276162
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446555591
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446772675
+      }
+    ],
+    "8.1 Create `src/kasbench_controller/experiment/pipeline.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276187
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446776584
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447015808
+      }
+    ],
+    "9.1 Create `src/kasbench_controller/experiment/orchestrator.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276210
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447020449
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447189322
+      }
+    ],
+    "9.2 Implement experiment logging": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276230
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447193852
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447494742
+      }
+    ],
+    "10.1 Create `src/kasbench_controller/commands/run_experiment.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276252
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447498723
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447814692
+      }
+    ],
+    "10.2 Register the command in `src/kasbench_controller/cli.py`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276277
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447818530
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447826551
+      }
+    ],
+    "11. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276301
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447831673
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447853129
+      }
+    ],
+    "12.1 Add `run-experiment` section to `README.md`": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276322
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447857021
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447965607
+      }
+    ],
+    "13. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785428276349
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447969462
+      },
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447988985
+      }
+    ],
+    "1. Define ExperimentConfig and data models": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445783046
+      }
+    ],
+    "2. Implement TrialScheduler": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785445909041
+      }
+    ],
+    "4. Implement ProgressManager": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446255018
+      }
+    ],
+    "5. Extract service functions from existing commands": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446525747
+      }
+    ],
+    "7. Implement AbortSequence": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785446772711
+      }
+    ],
+    "8. Implement TrialPipeline": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447015842
+      }
+    ],
+    "9. Implement ExperimentOrchestrator": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447494781
+      }
+    ],
+    "10. Implement CLI command integration": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447826582
+      }
+    ],
+    "12. Update README documentation": [
+      {
+        "executionId": "b70faa24-4452-4521-877a-f89355164495",
+        "chatSessionId": "sess_3836c026-193c-4f10-b7cd-fe3e21816453",
+        "timestamp": 1785447965639
+      }
+    ]
+  }
+}

@@ -21,7 +21,8 @@ Bastion Host (Controller)
     ├── kasbench benchmark-monitor       → Polls status until benchmark completes
     ├── kasbench benchmark-postprocessing → Exports artifacts to S3
     ├── kasbench shutdown                → Shuts down the Runner API
-    └── kasbench destroy-infrastructure  → Tears down all AWS resources
+    ├── kasbench destroy-infrastructure  → Tears down all AWS resources
+    └── kasbench run-experiment          → Orchestrates multi-trial experiments end-to-end
 ```
 
 ## Prerequisites
@@ -321,6 +322,81 @@ This performs the following steps:
 | `--no-apply` | No | Skip the tofu destroy step entirely |
 | `--ebs-wait` | No | Seconds to wait for EBS volume detachment (default: `300`) |
 
+### Run Experiment
+
+Orchestrate a complete multi-trial benchmark experiment from a single command. `run-experiment` automates the execution of multiple trials across a randomized schedule of autoscaler assignments, handling progress persistence, error recovery, and infrastructure cleanup automatically.
+
+Use this command when you need to run many trials (e.g., 5 trials × 4 autoscalers = 20 trials) without manual intervention. Each trial progresses through the full benchmark lifecycle, and progress is persisted to S3 so experiments can resume from where they left off after transient failures.
+
+```bash
+kasbench run-experiment \
+  --run-identifier exp-2024-001 \
+  --autoscalers hpa,vpa,keda,none \
+  --trials-per-autoscaler 5 \
+  --run-duration 30 \
+  --working-directory /data/benchmarks \
+  --s3-bucket kasbench-results \
+  --trial-prefix trial \
+  --var-file us-east-1.tfvars \
+  --auto-approve
+```
+
+**Trial Execution Flow:**
+
+Each trial executes the following 10 steps in order:
+
+1. **init** — Create the run directory and SQLite database (equivalent to `kasbench init`)
+2. **build-infrastructure** — Provision AWS resources via Open Tofu
+3. **wait** — Pause for 300 seconds (5 minutes) to allow infrastructure stabilization
+4. **initialize-runner** — Pull the Runner Docker image, start the container, and initialize the benchmark
+5. **benchmark-start** — Trigger load generation against the cluster
+6. **benchmark-monitor** — Poll the Runner API until the benchmark completes (timeout = `--run-duration` + 5 minutes)
+7. **benchmark-postprocessing** — Export metrics, metadata, TSDB data, output files, and the runner database
+8. **shutdown** — Gracefully shut down the Runner API container
+9. **destroy-infrastructure** — Tear down all AWS resources for the trial
+10. **upload-logs** — Upload the trial output directory to S3 at `{s3-bucket}/{run-identifier}/{trial-identifier}/benchmark-results`
+
+**Randomized Scheduling:**
+
+Autoscaler assignments are randomized across all trials to mitigate temporal ordering effects. For example, with `--autoscalers hpa,vpa --trials-per-autoscaler 3`, the 6 trials will each be assigned an autoscaler (3× hpa, 3× vpa) in a random order. Use `--random-seed` to make the schedule deterministic and reproducible.
+
+**Progress Persistence and Resumption:**
+
+Progress is stored to S3 at `{s3-bucket}/{run-identifier}/experiment-progress.json` after each step completes. If the experiment is interrupted, rerunning the same command resumes from the first incomplete trial. Use `--rerun-from-failed` to resume from the specific failed step within a trial rather than restarting the trial from the beginning.
+
+**Error Handling:**
+
+When a trial step fails, the orchestrator initiates a two-tier abort sequence to clean up infrastructure:
+1. Attempt `destroy-infrastructure` with the configured parameters
+2. If that fails, attempt a direct `tofu destroy` from the trial's infrastructure directory
+
+If both tiers fail, the experiment halts to prevent resource leakage. By default, the experiment continues to the next trial after a successful abort. Use `--halt-on-error` to stop the entire experiment at the first trial failure.
+
+**Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--run-identifier` | Yes | Unique identifier for this experiment (1-128 chars, alphanumeric/hyphens/underscores) |
+| `--autoscalers` | Yes | Comma-separated list of autoscalers to benchmark (`hpa`, `vpa`, `keda`, `none`) |
+| `--trials-per-autoscaler` | Yes | Number of trials per autoscaler entry (1-9999) |
+| `--run-duration` | Yes | Benchmark duration in minutes (minimum 1) |
+| `--working-directory` | Yes | Top-level working directory for experiment artifacts |
+| `--s3-bucket` | Yes | S3 bucket for progress persistence and artifact storage |
+| `--trial-prefix` | No | Prefix for trial identifiers (default: `trial`) |
+| `--aws-region` | No | AWS region (default: `us-east-1`) |
+| `--var-file` | No | Var-file arguments for tofu (repeatable). Filenames without path separators resolve to `environments/` |
+| `--var` | No | Variable assignment as `key=value` (repeatable) |
+| `--auto-approve` | No | Skip interactive approval for infrastructure operations (default: `false`) |
+| `--runner-version` | No | Runner version to deploy (default: `0.2.6`) |
+| `--health-timeout` | No | Health check timeout in seconds (default: `30`) |
+| `--rollout-timeout` | No | Rollout timeout in seconds (default: `600`) |
+| `--cluster-cidr-range` | No | Cluster CIDR range for Flannel networking (default: `10.244.0.0/16`) |
+| `--role-params` | No | Per-role load generation overrides as a JSON string. Each role must include `baseLoadIntensity`, `baseDelayPercentage`, and `spawnRate` |
+| `--random-seed` | No | Seed for trial schedule randomization. Deterministic if provided; otherwise uses a non-deterministic source |
+| `--ebs-wait` | No | EBS volume wait time in seconds (default: `300`) |
+| `--rerun-from-failed` | No | Resume from the first failed step within a trial instead of restarting the trial from the beginning (default: `false`) |
+| `--halt-on-error` | No | Stop the experiment at the first trial failure instead of continuing to the next trial (default: `false`) |
+
 ### Dry-Run Mode
 
 Preview what any command would do without making changes:
@@ -409,7 +485,28 @@ src/kasbench_controller/
 │   ├── benchmark_monitor.py     # benchmark-monitor subcommand
 │   ├── benchmark_postprocessing.py  # benchmark-postprocessing subcommand
 │   ├── shutdown.py              # shutdown subcommand
-│   └── destroy_infrastructure.py    # destroy-infrastructure subcommand
+│   ├── destroy_infrastructure.py    # destroy-infrastructure subcommand
+│   └── run_experiment.py        # run-experiment subcommand
+├── services/
+│   ├── __init__.py
+│   ├── init_service.py              # Extracted init logic
+│   ├── build_infrastructure_service.py  # Extracted build-infrastructure logic
+│   ├── initialize_runner_service.py     # Extracted initialize-runner logic
+│   ├── benchmark_start_service.py       # Extracted benchmark-start logic
+│   ├── benchmark_monitor_service.py     # Extracted benchmark-monitor logic
+│   ├── benchmark_postprocessing_service.py  # Extracted benchmark-postprocessing logic
+│   ├── shutdown_service.py              # Extracted shutdown logic
+│   └── destroy_infrastructure_service.py    # Extracted destroy-infrastructure logic
+├── experiment/
+│   ├── __init__.py
+│   ├── config.py           # ExperimentConfig dataclass
+│   ├── models.py           # TrialAssignment, TrialResult, AbortResult, ExperimentProgress
+│   ├── scheduler.py        # TrialScheduler (randomized schedule generation)
+│   ├── progress.py         # ProgressManager (S3 persistence and resumption)
+│   ├── abort.py            # AbortSequence (two-tier infrastructure cleanup)
+│   ├── pipeline.py         # TrialPipeline (single-trial step execution)
+│   ├── orchestrator.py     # ExperimentOrchestrator (top-level experiment runner)
+│   └── experiment_logger.py # Structured experiment logging
 ├── database.py             # SQLite schema and operations
 ├── tofu.py                 # Open Tofu subprocess wrapper
 ├── repository.py           # GitHub repository download

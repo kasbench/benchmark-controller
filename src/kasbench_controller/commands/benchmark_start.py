@@ -7,11 +7,10 @@ from pathlib import Path
 
 import click
 
-from kasbench_controller.database import DatabaseManager
 from kasbench_controller.exceptions import KasbenchError
 from kasbench_controller.logging import log_dry_run, log_step
-from kasbench_controller.models import RunContext, TrialContext, load_trial_config
-from kasbench_controller.runner_api import RunnerAPIClient
+from kasbench_controller.models import RunContext, TrialContext
+from kasbench_controller.services.benchmark_start_service import run_benchmark_start
 
 
 def _parse_role_params(value: str) -> dict:
@@ -95,19 +94,17 @@ def benchmark_start_cmd(
         sys.exit(1)
 
     try:
-        # Build context objects
-        run_ctx = RunContext(
-            working_directory=Path(working_directory),
-            run_identifier=run_identifier,
-        )
-        trial_ctx = TrialContext(
-            run_context=run_ctx,
-            trial_identifier=trial_identifier,
-            autoscaler="",  # Not needed for this command
-        )
-
         # --- Dry-run mode ---
         if dry_run:
+            run_ctx = RunContext(
+                working_directory=Path(working_directory),
+                run_identifier=run_identifier,
+            )
+            trial_ctx = TrialContext(
+                run_context=run_ctx,
+                trial_identifier=trial_identifier,
+                autoscaler="",  # Not needed for this command
+            )
             log_dry_run(logger, "load_trial_config", {
                 "path": str(trial_ctx.output_directory / "trial_config.json"),
             })
@@ -134,68 +131,15 @@ def benchmark_start_cmd(
             log_step(logger, "benchmark_start_complete", "success", dry_run=True)
             sys.exit(0)
 
-        # --- Step 1: Validate run directory and database ---
-        if not run_ctx.run_directory.exists():
-            raise KasbenchError(
-                f"Run directory does not exist: '{run_ctx.run_directory}'. "
-                f"Run 'kasbench init' first."
-            )
-
-        if not run_ctx.db_path.exists():
-            raise KasbenchError(
-                f"Database file not found: '{run_ctx.db_path}'. "
-                f"Run 'kasbench init' first."
-            )
-
-        db = DatabaseManager(run_ctx.db_path)
-        if not db.verify_schema():
-            raise KasbenchError(
-                f"Database at '{run_ctx.db_path}' does not contain required tables "
-                f"(trials, events). Run 'kasbench init' first."
-            )
-
-        # --- Step 2: Load trial config ---
-        trial_config = load_trial_config(trial_ctx)
-        log_step(logger, "load_trial_config", "success",
-                 path=str(trial_ctx.output_directory / "trial_config.json"))
-
-        # --- Step 3: Look up trial in database ---
-        trial = db.get_trial_by_identifiers(run_identifier, trial_identifier)
-        if trial is None:
-            raise KasbenchError(
-                f"No trial found with run_identifier='{run_identifier}' and "
-                f"trial_identifier='{trial_identifier}'. "
-                f"Has build-infrastructure been run for this trial?"
-            )
-        trial_id = trial["trial_id"]
-        log_step(logger, "get_trial_by_identifiers", "success", trial_id=trial_id)
-
-        # --- Step 4: POST /start ---
-        runner = RunnerAPIClient(
-            base_url=f"http://{trial_config.benchmark_runner_public_ip}:8080"
-        )
-        runner.start(
-            benchmark_length_minutes=benchmark_length_minutes,
+        # --- Execute via service ---
+        run_benchmark_start(
+            working_directory=Path(working_directory),
+            run_identifier=run_identifier,
+            trial_identifier=trial_identifier,
             role_params=parsed_role_params,
+            logger=logger,
+            benchmark_length_minutes=benchmark_length_minutes,
         )
-        log_step(logger, "post_start", "success",
-                 endpoint="/start")
-
-        # --- Step 5: Record benchmark_start_time in database ---
-        db.record_benchmark_start_time(trial_id)
-        log_step(logger, "record_benchmark_start_time", "success", trial_id=trial_id)
-
-        # --- Step 6: Insert event for benchmark start ---
-        db.insert_event(
-            trial_id=trial_id,
-            event_type="benchmark_start",
-            event_message="Benchmark load generation started",
-        )
-        log_step(logger, "insert_event", "success",
-                 event_type="benchmark_start", trial_id=trial_id)
-
-        # --- Step 7: Exit success ---
-        log_step(logger, "benchmark_start_complete", "success")
         sys.exit(0)
 
     except KasbenchError as e:

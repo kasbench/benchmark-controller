@@ -6,14 +6,14 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
 
 ## Tasks
 
-- [ ] 1. Define ExperimentConfig and data models
-  - [ ] 1.1 Create `src/kasbench_controller/experiment/config.py` with ExperimentConfig dataclass
+- [x] 1. Define ExperimentConfig and data models
+  - [x] 1.1 Create `src/kasbench_controller/experiment/config.py` with ExperimentConfig dataclass
     - Define all fields matching the design (run_identifier, trial_prefix, autoscalers, trials_per_autoscaler, run_duration, working_directory, s3_bucket, aws_region, var_files, variables, auto_approve, runner_version, health_timeout, rollout_timeout, cluster_cidr_range, role_params, random_seed, ebs_wait, rerun_from_failed, halt_on_error)
     - Add `total_trials` property that computes `len(autoscalers) * trials_per_autoscaler`
     - Add validation in `__post_init__` for trial count limit (max 9999)
     - _Requirements: 1.1–1.24, 2.3, 2.4_
 
-  - [ ] 1.2 Create `src/kasbench_controller/experiment/__init__.py` and `src/kasbench_controller/experiment/models.py`
+  - [x] 1.2 Create `src/kasbench_controller/experiment/__init__.py` and `src/kasbench_controller/experiment/models.py`
     - Define `TrialAssignment` dataclass (trial_identifier, autoscaler, sequence_number)
     - Define `TrialResult` dataclass (trial_identifier, autoscaler, success, failed_step, error_message)
     - Define `AbortResult` dataclass (success, tier_reached, must_halt, error_message)
@@ -29,8 +29,8 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - **Property 5: Variable assignment validation**
     - **Validates: Requirements 1.3, 1.4, 1.12**
 
-- [ ] 2. Implement TrialScheduler
-  - [ ] 2.1 Create `src/kasbench_controller/experiment/scheduler.py`
+- [x] 2. Implement TrialScheduler
+  - [x] 2.1 Create `src/kasbench_controller/experiment/scheduler.py`
     - Implement `TrialScheduler.__init__` accepting ExperimentConfig
     - Implement `generate_schedule()` using Fisher-Yates shuffle on a pool of autoscaler entries
     - Implement `effective_seed` property (use provided seed or generate from non-deterministic source, log it)
@@ -50,11 +50,11 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - **Property 8: Schedule generation is deterministic given the same seed**
     - **Validates: Requirements 3.2**
 
-- [ ] 3. Checkpoint - Ensure all tests pass
+- [x] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement ProgressManager
-  - [ ] 4.1 Create `src/kasbench_controller/experiment/progress.py`
+- [x] 4. Implement ProgressManager
+  - [x] 4.1 Create `src/kasbench_controller/experiment/progress.py`
     - Implement `ProgressManager.__init__` with s3_bucket, aws_region, run_identifier
     - Implement `load_or_create()` that checks S3 for existing progress file or creates new one
     - Implement `record_step_result()` that updates in-memory state and persists to S3
@@ -73,62 +73,62 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - **Property 13: Resume point identification**
     - **Validates: Requirements 6.7, 6.8**
 
-- [ ] 5. Extract service functions from existing commands
-  - [ ] 5.1 Create `src/kasbench_controller/services/__init__.py` and extract `run_init` service
+- [x] 5. Extract service functions from existing commands
+  - [x] 5.1 Create `src/kasbench_controller/services/__init__.py` and extract `run_init` service
     - Extract core logic from `commands/init.py` into `services/init_service.py`
     - Service function raises KasbenchError on failure instead of calling sys.exit()
     - Accept typed parameters (working_directory: Path, run_identifier: str, logger)
     - Refactor existing `init_cmd` to call the service function
     - _Requirements: 4.2_
 
-  - [ ] 5.2 Extract `run_build_infrastructure` service
+  - [x] 5.2 Extract `run_build_infrastructure` service
     - Extract core logic from `commands/build_infrastructure.py` into `services/build_infrastructure_service.py`
     - Service function accepts all required parameters and raises KasbenchError on failure
     - Refactor existing `build_infrastructure_cmd` to call the service function
     - _Requirements: 4.3_
 
-  - [ ] 5.3 Extract `run_initialize_runner` service
+  - [x] 5.3 Extract `run_initialize_runner` service
     - Extract core logic from `commands/initialize_runner.py` into `services/initialize_runner_service.py`
     - Service function accepts typed parameters and raises KasbenchError on failure
     - Refactor existing `initialize_runner_cmd` to call the service function
     - _Requirements: 4.5_
 
-  - [ ] 5.4 Extract `run_benchmark_start` service
+  - [x] 5.4 Extract `run_benchmark_start` service
     - Extract core logic from `commands/benchmark_start.py` into `services/benchmark_start_service.py`
     - Service function accepts typed parameters and raises KasbenchError on failure
     - Refactor existing `benchmark_start_cmd` to call the service function
     - _Requirements: 4.6, 4.7_
 
-  - [ ] 5.5 Extract `run_benchmark_monitor` service
+  - [x] 5.5 Extract `run_benchmark_monitor` service
     - Extract core logic from `commands/benchmark_monitor.py` into `services/benchmark_monitor_service.py`
     - Service function returns the final benchmark status ("success" or "failed")
     - Raise KasbenchError on timeout or API errors
     - Refactor existing `benchmark_monitor_cmd` to call the service function
     - _Requirements: 4.8, 4.9_
 
-  - [ ] 5.6 Extract `run_benchmark_postprocessing` service
+  - [x] 5.6 Extract `run_benchmark_postprocessing` service
     - Extract core logic from `commands/benchmark_postprocessing.py` into `services/benchmark_postprocessing_service.py`
     - Service function raises KasbenchError on failure
     - Refactor existing `benchmark_postprocessing_cmd` to call the service function
     - _Requirements: 4.10_
 
-  - [ ] 5.7 Extract `run_shutdown` service
+  - [x] 5.7 Extract `run_shutdown` service
     - Extract core logic from `commands/shutdown.py` into `services/shutdown_service.py`
     - Service function raises KasbenchError on failure
     - Refactor existing `shutdown_cmd` to call the service function
     - _Requirements: 4.11_
 
-  - [ ] 5.8 Extract `run_destroy_infrastructure` service
+  - [x] 5.8 Extract `run_destroy_infrastructure` service
     - Extract core logic from `commands/destroy_infrastructure.py` into `services/destroy_infrastructure_service.py`
     - Service function raises KasbenchError on failure
     - Refactor existing `destroy_infrastructure_cmd` to call the service function
     - _Requirements: 4.12, 5.4_
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement AbortSequence
-  - [ ] 7.1 Create `src/kasbench_controller/experiment/abort.py`
+- [x] 7. Implement AbortSequence
+  - [x] 7.1 Create `src/kasbench_controller/experiment/abort.py`
     - Implement `AbortSequence.__init__` accepting ExperimentConfig and logger
     - Implement `execute()` with two-tier fallback:
       - Tier 1: Call `run_destroy_infrastructure` service with configured params
@@ -144,8 +144,8 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - Test skip when step is "init"
     - _Requirements: 5.4, 5.5, 5.6, 5.8_
 
-- [ ] 8. Implement TrialPipeline
-  - [ ] 8.1 Create `src/kasbench_controller/experiment/pipeline.py`
+- [x] 8. Implement TrialPipeline
+  - [x] 8.1 Create `src/kasbench_controller/experiment/pipeline.py`
     - Define `TrialPipeline.STEPS` constant with all 10 steps in order
     - Implement `__init__` accepting config, assignment, progress_manager, abort_sequence, logger
     - Implement `execute(start_from_step)` that runs steps sequentially, calling service functions
@@ -165,8 +165,8 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - **Property 11: halt-on-error controls whether subsequent trials execute**
     - **Validates: Requirements 5.2, 5.3**
 
-- [ ] 9. Implement ExperimentOrchestrator
-  - [ ] 9.1 Create `src/kasbench_controller/experiment/orchestrator.py`
+- [x] 9. Implement ExperimentOrchestrator
+  - [x] 9.1 Create `src/kasbench_controller/experiment/orchestrator.py`
     - Implement `ExperimentOrchestrator.__init__` accepting config and logger
     - Implement `run()` method that:
       1. Generates schedule via TrialScheduler
@@ -179,7 +179,7 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
       8. Returns exit code (0 = all trials complete or experiment already done)
     - _Requirements: 4.1, 5.2, 5.3, 6.1–6.8_
 
-  - [ ] 9.2 Implement experiment logging
+  - [x] 9.2 Implement experiment logging
     - Create JSON Lines log file at `{working_directory}/benchmarks/{run_identifier}/experiment.log`
     - Emit structured log entries with ISO 8601 UTC timestamp, trial_identifier, autoscaler, step, outcome
     - For failed steps, include error message, stderr, return code, and traceback
@@ -190,8 +190,8 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - **Property 14: Log entries contain all required fields**
     - **Validates: Requirements 7.1, 7.4**
 
-- [ ] 10. Implement CLI command integration
-  - [ ] 10.1 Create `src/kasbench_controller/commands/run_experiment.py`
+- [x] 10. Implement CLI command integration
+  - [x] 10.1 Create `src/kasbench_controller/commands/run_experiment.py`
     - Define Click command with all parameters from Requirement 1 (1.1–1.24)
     - Implement parameter validation callbacks:
       - run-identifier: 1-128 chars, alphanumeric/hyphens/underscores
@@ -204,7 +204,7 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - Exit with orchestrator's return code
     - _Requirements: 1.1–1.24_
 
-  - [ ] 10.2 Register the command in `src/kasbench_controller/cli.py`
+  - [x] 10.2 Register the command in `src/kasbench_controller/cli.py`
     - Import the run_experiment command module
     - Add `cli.add_command(run_experiment.run_experiment_cmd)`
     - _Requirements: 1.1_
@@ -214,11 +214,11 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - **Property 4: Var-file path resolution**
     - **Validates: Requirements 1.10, 1.18, 1.19**
 
-- [ ] 11. Checkpoint - Ensure all tests pass
+- [x] 11. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Update README documentation
-  - [ ] 12.1 Add `run-experiment` section to `README.md`
+- [x] 12. Update README documentation
+  - [x] 12.1 Add `run-experiment` section to `README.md`
     - Place after the existing single-trial command sections (after "Destroy Infrastructure")
     - Include prose description of multi-trial orchestration purpose
     - Add parameters table with Option, Required, and Description columns for all parameters
@@ -228,7 +228,7 @@ Implement the `run-experiment` CLI command that orchestrates multi-trial Kuberne
     - Document --rerun-from-failed and --halt-on-error effects on trial execution flow
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 13. Final checkpoint - Ensure all tests pass
+- [x] 13. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

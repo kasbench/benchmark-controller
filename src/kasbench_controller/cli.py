@@ -10,6 +10,7 @@ from kasbench_controller.commands import (
     destroy_infrastructure,
     init,
     initialize_runner,
+    run_experiment,
     shutdown,
 )
 from kasbench_controller.logging import configure_logging
@@ -35,3 +36,4 @@ cli.add_command(benchmark_monitor.benchmark_monitor_cmd)
 cli.add_command(benchmark_postprocessing.benchmark_postprocessing_cmd)
 cli.add_command(shutdown.shutdown_cmd)
 cli.add_command(destroy_infrastructure.destroy_infrastructure_cmd)
+cli.add_command(run_experiment.run_experiment_cmd)
