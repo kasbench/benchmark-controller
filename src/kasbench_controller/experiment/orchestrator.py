@@ -18,6 +18,7 @@ from kasbench_controller.experiment.models import AbortResult
 from kasbench_controller.experiment.pipeline import TrialPipeline
 from kasbench_controller.experiment.progress import ProgressManager
 from kasbench_controller.experiment.scheduler import TrialScheduler
+from kasbench_controller.services.init_service import run_init
 
 
 class _TrackingAbortSequence(AbortSequence):
@@ -152,6 +153,17 @@ class ExperimentOrchestrator:
                     f"{f', step {step_name}' if step_name else ''}."
                 ),
             )
+
+        # Run init once for the entire experiment (only on fresh start, not resume)
+        if trial_index == 0 and step_name is None:
+            self._logger.info("experiment_init_start", run_identifier=self._config.run_identifier)
+            run_init(
+                working_directory=self._config.working_directory,
+                run_identifier=self._config.run_identifier,
+                logger=self._logger,
+                force=False,
+            )
+            self._logger.info("experiment_init_complete", run_identifier=self._config.run_identifier)
 
         # Step 6: Iterate through trials from the resume point
         for i in range(trial_index, len(schedule)):

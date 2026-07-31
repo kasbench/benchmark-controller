@@ -19,7 +19,6 @@ _EXCLUDED_PARAMS = {"halt_on_error", "rerun_from_failed"}
 
 # All trial steps in execution order
 TRIAL_STEPS = [
-    "init",
     "build-infrastructure",
     "wait",
     "initialize-runner",

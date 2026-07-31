@@ -1,7 +1,7 @@
 """Trial pipeline - sequential execution of all steps in a single trial.
 
-Implements the TrialPipeline class that runs each trial through the 10-step
-benchmark lifecycle: init, build-infrastructure, wait, initialize-runner,
+Implements the TrialPipeline class that runs each trial through the 9-step
+benchmark lifecycle: build-infrastructure, wait, initialize-runner,
 benchmark-start, benchmark-monitor, benchmark-postprocessing, shutdown,
 destroy-infrastructure, upload-logs.
 """
@@ -30,7 +30,6 @@ from kasbench_controller.services.build_infrastructure_service import (
 from kasbench_controller.services.destroy_infrastructure_service import (
     run_destroy_infrastructure,
 )
-from kasbench_controller.services.init_service import run_init
 from kasbench_controller.services.initialize_runner_service import run_initialize_runner
 from kasbench_controller.services.shutdown_service import run_shutdown
 
@@ -44,7 +43,6 @@ class TrialPipeline:
     """
 
     STEPS = [
-        "init",
         "build-infrastructure",
         "wait",
         "initialize-runner",
@@ -149,12 +147,11 @@ class TrialPipeline:
                     error=error_message,
                 )
 
-                # Invoke abort sequence unless failure was during init
-                if step != "init":
-                    self._abort_sequence.execute(
-                        trial_identifier=self._assignment.trial_identifier,
-                        autoscaler=self._assignment.autoscaler,
-                    )
+                # Invoke abort sequence on step failure
+                self._abort_sequence.execute(
+                    trial_identifier=self._assignment.trial_identifier,
+                    autoscaler=self._assignment.autoscaler,
+                )
 
                 return TrialResult(
                     trial_identifier=self._assignment.trial_identifier,
@@ -219,9 +216,7 @@ class TrialPipeline:
             KasbenchError: On any step failure.
             ValueError: If the step name is unrecognized.
         """
-        if step == "init":
-            self._step_init()
-        elif step == "build-infrastructure":
+        if step == "build-infrastructure":
             self._step_build_infrastructure()
         elif step == "wait":
             self._step_wait()
@@ -241,15 +236,6 @@ class TrialPipeline:
             self._step_upload_logs()
         else:
             raise ValueError(f"Unknown pipeline step: '{step}'")
-
-    def _step_init(self) -> None:
-        """Execute the init step."""
-        run_init(
-            working_directory=self._config.working_directory,
-            run_identifier=self._config.run_identifier,
-            logger=self._logger,
-            force=False,
-        )
 
     def _step_build_infrastructure(self) -> None:
         """Execute the build-infrastructure step."""
