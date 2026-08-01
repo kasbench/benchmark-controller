@@ -4,6 +4,7 @@ Extracted from commands/destroy_infrastructure.py so it can be called programmat
 by the experiment orchestrator without Click/sys.exit dependencies.
 """
 
+import shutil
 import time
 from pathlib import Path
 
@@ -126,6 +127,16 @@ def run_destroy_infrastructure(
     else:
         db.insert_event(trial_id, "tofu_destroy_skipped", "--no-apply flag set, skipping tofu destroy")
         log_step(logger, "tofu_destroy_skipped", "success", reason="--no-apply flag set")
+
+    # --- Step 7b: Remove .terraform directory to reclaim disk space (~1.7 GB) ---
+    terraform_dir = trial_ctx.tofu_directory / ".terraform"
+    if terraform_dir.exists():
+        shutil.rmtree(terraform_dir)
+        db.insert_event(trial_id, "terraform_dir_removed", f"Removed {terraform_dir}")
+        log_step(logger, "remove_terraform_dir", "success", path=str(terraform_dir))
+    else:
+        log_step(logger, "remove_terraform_dir", "skipped", path=str(terraform_dir),
+                 reason="directory does not exist")
 
     # --- Step 8: Record cleanup_end_time ---
     db.record_cleanup_end_time(trial_id)
