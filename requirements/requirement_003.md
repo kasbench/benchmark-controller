@@ -12,7 +12,7 @@ This requirement adds `run-experiment` as a new CLI command.  Whereas all the pr
 | `--trials-per-autoscaler` | Yes | N/A | The number of trials conducted for each autoscaler.  The number of trials is the number of autoscalers passed with --autoscaler multiplied by --trials-per-autoscaler |
 | `--run-duration` | Yes | N/A | Benchmark run duration in minutes |
 | `--working-directory` | Yes | N/A | Top-level directory for all benchmark data |
-| `--aws-region` | No | `us-east-1 | AWS region for infrastructure deployment|
+| `--aws-region` | No | `us-east-1` | AWS region for infrastructure deployment|
 | `--s3-bucket` | Yes | N/A | S3 bucket for artifact storage |
 | `--var-file` | No | None | Tofu var-file (repeatable). Filenames without path separators resolve to `environments/` |
 | `--var` | No | None | Tofu variable assignment as `key=value` (repeatable) |
