@@ -530,6 +530,102 @@ class TestIsComplete:
         )
         assert pm.is_complete() is False
 
+    @patch("kasbench_controller.experiment.progress.boto3")
+    def test_aborted_trials_excluded_from_completion(self, mock_boto3):
+        """Aborted trials are skipped — only non-aborted trials must be complete."""
+        all_steps = [
+            {"step": s, "status": "success", "timestamp": "2024-01-01T00:00:00Z"}
+            for s in TRIAL_STEPS
+        ]
+        pm = ProgressManager("bucket", "us-east-1", "run-1")
+        pm._progress = ExperimentProgress(
+            parameters={},
+            schedule=[
+                {"trial_identifier": "trial0001", "autoscaler": "hpa"},
+                {"trial_identifier": "trial0002", "autoscaler": "vpa"},
+                {"trial_identifier": "trial0003", "autoscaler": "hpa"},
+            ],
+            trial_results=[
+                {"trial_identifier": "trial0001", "autoscaler": "hpa", "steps": all_steps},
+                {
+                    "trial_identifier": "trial0002",
+                    "autoscaler": "vpa",
+                    "status": "aborted",
+                    "reason": "spot-interruption",
+                    "aborted_at": "2024-01-01T00:10:00Z",
+                    "steps": [
+                        {"step": "build-infrastructure", "status": "success", "timestamp": "2024-01-01T00:05:00Z"},
+                    ],
+                },
+                {"trial_identifier": "trial0003", "autoscaler": "hpa", "steps": all_steps},
+            ],
+            effective_seed=42,
+        )
+        # trial0002 is aborted, but trial0001 and trial0003 are complete => True
+        assert pm.is_complete() is True
+
+    @patch("kasbench_controller.experiment.progress.boto3")
+    def test_only_aborted_trials_incomplete_returns_true(self, mock_boto3):
+        """When only aborted trials remain incomplete, is_complete returns True."""
+        all_steps = [
+            {"step": s, "status": "success", "timestamp": "2024-01-01T00:00:00Z"}
+            for s in TRIAL_STEPS
+        ]
+        pm = ProgressManager("bucket", "us-east-1", "run-1")
+        pm._progress = ExperimentProgress(
+            parameters={},
+            schedule=[
+                {"trial_identifier": "trial0001", "autoscaler": "hpa"},
+                {"trial_identifier": "trial0002", "autoscaler": "vpa"},
+            ],
+            trial_results=[
+                {"trial_identifier": "trial0001", "autoscaler": "hpa", "steps": all_steps},
+                {
+                    "trial_identifier": "trial0002",
+                    "autoscaler": "vpa",
+                    "status": "aborted",
+                    "reason": "spot-interruption",
+                    "aborted_at": "2024-01-01T00:10:00Z",
+                    "steps": [],
+                },
+            ],
+            effective_seed=42,
+        )
+        assert pm.is_complete() is True
+
+    @patch("kasbench_controller.experiment.progress.boto3")
+    def test_non_aborted_incomplete_trial_returns_false(self, mock_boto3):
+        """When a non-aborted trial is incomplete, is_complete returns False even if others are aborted."""
+        pm = ProgressManager("bucket", "us-east-1", "run-1")
+        pm._progress = ExperimentProgress(
+            parameters={},
+            schedule=[
+                {"trial_identifier": "trial0001", "autoscaler": "hpa"},
+                {"trial_identifier": "trial0002", "autoscaler": "vpa"},
+                {"trial_identifier": "trial0003", "autoscaler": "hpa"},
+            ],
+            trial_results=[
+                {
+                    "trial_identifier": "trial0001",
+                    "autoscaler": "hpa",
+                    "steps": [
+                        {"step": "build-infrastructure", "status": "success", "timestamp": "2024-01-01T00:00:00Z"},
+                    ],
+                },
+                {
+                    "trial_identifier": "trial0002",
+                    "autoscaler": "vpa",
+                    "status": "aborted",
+                    "reason": "spot-interruption",
+                    "aborted_at": "2024-01-01T00:10:00Z",
+                    "steps": [],
+                },
+            ],
+            effective_seed=42,
+        )
+        # trial0001 is incomplete (not all steps success), trial0003 has no results
+        assert pm.is_complete() is False
+
 
 class TestS3UploadRetry:
     """Tests for S3 upload retry behavior."""

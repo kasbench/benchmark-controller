@@ -1,0 +1,357 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add spot configuration parameters to ExperimentConfig": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927185
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681933763
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681977524
+      }
+    ],
+    "1.2 Extend TrialResult model with status field": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927263
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681934562
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681978302
+      }
+    ],
+    "2.1 Create the SpotInterruptionDetector class": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927313
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681984644
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682132180
+      }
+    ],
+    "3. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927348
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682255107
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682278902
+      }
+    ],
+    "4.1 Add interrupt_event parameter and inter-step checking to TrialPipeline": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927373
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682141514
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682232824
+      }
+    ],
+    "5.1 Add record_trial_aborted method to ProgressManager": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927404
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681985412
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682132970
+      }
+    ],
+    "5.2 Add append_to_schedule method to ProgressManager": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927428
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681986210
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682133723
+      }
+    ],
+    "5.3 Modify is_complete to exclude aborted trials": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927452
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681986973
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682134541
+      }
+    ],
+    "5.4 Modify find_resume_point to skip aborted trials": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927477
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681987824
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682135332
+      }
+    ],
+    "6. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927500
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682285023
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682301369
+      }
+    ],
+    "7.1 Add detector lifecycle and interrupt detection to orchestrator trial loop": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927522
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682328633
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682498658
+      }
+    ],
+    "7.2 Add spot-interruption-specific handling branch to orchestrator": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927542
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682505559
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682667271
+      }
+    ],
+    "7.3 Implement retry cap check in orchestrator": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927564
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682506219
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682668163
+      }
+    ],
+    "7.4 Implement schedule replacement for aborted trials": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927594
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682506971
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682669052
+      }
+    ],
+    "7.5 Implement cooldown wait after spot interruption": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927631
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682507779
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682669952
+      }
+    ],
+    "7.6 Reset consecutive interruption counter on successful trial": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927660
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682508561
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682670840
+      }
+    ],
+    "8. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681927680
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682685944
+      },
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682714495
+      }
+    ],
+    "1. Extend configuration and models with spot-related fields": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785681978329
+      }
+    ],
+    "2. Implement SpotInterruptionDetector": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682132211
+      }
+    ],
+    "5. Extend ProgressManager with aborted trial recording and schedule extension": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682135353
+      }
+    ],
+    "4. Modify TrialPipeline to accept and check interrupt_event": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682232852
+      }
+    ],
+    "2.2 Write unit tests for SpotInterruptionDetector": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682321382
+      }
+    ],
+    "5.5 Write unit tests for ProgressManager extensions": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682322140
+      }
+    ],
+    "4.2 Write unit tests for pipeline interrupt handling": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682322911
+      }
+    ],
+    "7. Modify ExperimentOrchestrator for spot interruption lifecycle management": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682670869
+      }
+    ],
+    "7.7 Write unit tests for orchestrator spot-interruption logic": [
+      {
+        "executionId": "57fdf8ea-d9be-4030-bd77-512f3092ff48",
+        "chatSessionId": "sess_594359dc-17a9-48f1-ad59-670ddc65a946",
+        "timestamp": 1785682683060
+      }
+    ]
+  }
+}

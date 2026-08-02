@@ -158,8 +158,68 @@ class ProgressManager:
         # Persist to S3
         self._upload_progress()
 
+    def record_trial_aborted(
+        self, trial_id: str, reason: str, failed_step: str | None = None
+    ) -> None:
+        """Record a trial as aborted with the given reason.
+
+        Preserves any step history already recorded for this trial.
+        Adds an 'aborted' marker with reason and timestamp.
+
+        Args:
+            trial_id: The trial identifier (e.g., "trial0001").
+            reason: The reason for aborting (e.g., "spot-interruption").
+            failed_step: Optional name of the step that was interrupted.
+        """
+        if self._progress is None:
+            raise KasbenchError("ProgressManager has no loaded progress state.")
+
+        # Find or create the trial result entry
+        trial_entry = None
+        for entry in self._progress.trial_results:
+            if entry["trial_identifier"] == trial_id:
+                trial_entry = entry
+                break
+
+        if trial_entry is None:
+            # Find the autoscaler from the schedule
+            autoscaler = ""
+            for sched_entry in self._progress.schedule:
+                if sched_entry["trial_identifier"] == trial_id:
+                    autoscaler = sched_entry["autoscaler"]
+                    break
+
+            trial_entry = {
+                "trial_identifier": trial_id,
+                "autoscaler": autoscaler,
+                "steps": [],
+            }
+            self._progress.trial_results.append(trial_entry)
+
+        # Mark as aborted — preserves existing steps list
+        trial_entry["status"] = "aborted"
+        trial_entry["reason"] = reason
+        trial_entry["aborted_at"] = datetime.now(timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        if failed_step is not None:
+            trial_entry["failed_step"] = failed_step
+
+        self._logger.info(
+            "trial_aborted_recorded",
+            trial_id=trial_id,
+            reason=reason,
+            failed_step=failed_step,
+        )
+
+        # Persist to S3
+        self._upload_progress()
+
     def find_resume_point(self, rerun_from_failed: bool) -> tuple[int, str | None]:
         """Find the trial index and step to resume from.
+
+        Skips trials marked as "aborted" and continues to the next pending
+        trial in the schedule (including any appended replacement trials).
 
         Args:
             rerun_from_failed: If True, resume from the failed step within
@@ -191,6 +251,10 @@ class ProgressManager:
                 # No results recorded for this trial — start from beginning
                 return (i, None)
 
+            # Skip aborted trials — they have replacement trials appended
+            if trial_result.get("status") == "aborted":
+                continue
+
             steps = trial_result.get("steps", [])
 
             # Check if all steps completed successfully
@@ -218,7 +282,7 @@ class ProgressManager:
                 # Resume from the beginning of this incomplete trial
                 return (i, None)
 
-        # All trials complete
+        # All trials complete (or all remaining are aborted with no pending replacements)
         return (len(schedule), None)
 
     def validate_parameters(self, config: ExperimentConfig) -> list[str]:
@@ -252,11 +316,15 @@ class ProgressManager:
         return mismatched
 
     def is_complete(self) -> bool:
-        """Check if all trials are marked complete.
+        """Check if all non-aborted trials have completed successfully.
+
+        Trials with status 'aborted' are excluded from completion checks.
+        Only trials in the schedule that are not marked aborted must have
+        all steps completed as 'success'.
 
         Returns:
-            True if every trial in the schedule has all steps recorded
-            as "success", False otherwise.
+            True if every non-aborted trial in the schedule has all steps
+            recorded as "success", False otherwise.
         """
         if self._progress is None:
             return False
@@ -280,6 +348,10 @@ class ProgressManager:
             if trial_result is None:
                 return False
 
+            # Skip aborted trials — they don't count toward completion
+            if trial_result.get("status") == "aborted":
+                continue
+
             steps = trial_result.get("steps", [])
             successful_steps = {s["step"] for s in steps if s["status"] == "success"}
 
@@ -287,6 +359,41 @@ class ProgressManager:
                 return False
 
         return True
+
+    def append_to_schedule(self, trial_identifier: str, autoscaler: str) -> None:
+        """Append a replacement trial to the schedule and persist.
+
+        Adds a new trial assignment to the end of the schedule list in the
+        progress state and immediately persists the updated state to S3.
+
+        Args:
+            trial_identifier: The identifier for the new trial (e.g., "trial0004").
+            autoscaler: The autoscaler to assign to the replacement trial.
+
+        Raises:
+            KasbenchError: If no progress state is loaded.
+        """
+        if self._progress is None:
+            raise KasbenchError("ProgressManager has no loaded progress state.")
+
+        self._progress.schedule.append(
+            {"trial_identifier": trial_identifier, "autoscaler": autoscaler}
+        )
+        self._upload_progress()
+        self._logger.info(
+            "schedule_extended",
+            trial_identifier=trial_identifier,
+            autoscaler=autoscaler,
+            total_scheduled=len(self._progress.schedule),
+        )
+
+    def persist(self) -> None:
+        """Persist the current progress state to S3.
+
+        Convenience method for callers that need to ensure progress is
+        saved (e.g., before halting the experiment due to retry cap).
+        """
+        self._upload_progress()
 
     def _download_progress(self) -> ExperimentProgress | None:
         """Download and parse the progress file from S3.

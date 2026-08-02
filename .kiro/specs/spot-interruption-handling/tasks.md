@@ -6,20 +6,20 @@ Add spot instance interruption detection and handling to the experiment orchestr
 
 ## Tasks
 
-- [ ] 1. Extend configuration and models with spot-related fields
-  - [ ] 1.1 Add spot configuration parameters to ExperimentConfig
+- [x] 1. Extend configuration and models with spot-related fields
+  - [x] 1.1 Add spot configuration parameters to ExperimentConfig
     - Add `spot_cooldown_seconds: int = 600` field
     - Add `spot_max_consecutive_interruptions: int = 3` field
     - Add `spot_poll_interval_seconds: int = 15` field
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 1.2 Extend TrialResult model with status field
+  - [x] 1.2 Extend TrialResult model with status field
     - Add `status: str = "completed"` field to TrialResult dataclass
     - Status values: "completed", "failed", "aborted"
     - _Requirements: 2.2_
 
-- [ ] 2. Implement SpotInterruptionDetector
-  - [ ] 2.1 Create the SpotInterruptionDetector class
+- [x] 2. Implement SpotInterruptionDetector
+  - [x] 2.1 Create the SpotInterruptionDetector class
     - Create new file `src/kasbench_controller/experiment/spot_detector.py`
     - Implement SSH-based polling via paramiko to query EC2 instance metadata endpoint (`http://169.254.169.254/latest/meta-data/spot/instance-action`)
     - Use `threading.Event` for cross-thread signaling
@@ -31,7 +31,7 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Log debug on SSH failures, skip node, continue polling
     - _Requirements: 1.1, 1.2, 1.3_
 
-  - [ ]* 2.2 Write unit tests for SpotInterruptionDetector
+  - [x]* 2.2 Write unit tests for SpotInterruptionDetector
     - **Property 1: Detection active only during infrastructure steps**
     - **Property 2: Detection latency bounded by poll interval**
     - Test that `interrupt_event` is set when a node returns HTTP 200
@@ -41,11 +41,11 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Mock paramiko SSH connections
     - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 3. Checkpoint - Ensure all tests pass
+- [x] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Modify TrialPipeline to accept and check interrupt_event
-  - [ ] 4.1 Add interrupt_event parameter and inter-step checking to TrialPipeline
+- [x] 4. Modify TrialPipeline to accept and check interrupt_event
+  - [x] 4.1 Add interrupt_event parameter and inter-step checking to TrialPipeline
     - Add optional `interrupt_event: threading.Event | None = None` parameter to `__init__`
     - In `execute()`, check `interrupt_event.is_set()` before each step
     - In `execute()`, check `interrupt_event.is_set()` after each step completes
@@ -53,7 +53,7 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Record successful steps in progress before checking interrupt (preserve step history)
     - _Requirements: 2.1, 2.2, 6.4_
 
-  - [ ]* 4.2 Write unit tests for pipeline interrupt handling
+  - [x]* 4.2 Write unit tests for pipeline interrupt handling
     - **Property 3: Pipeline terminates on interrupt signal**
     - Test that pipeline exits early when interrupt_event is already set before execution
     - Test that pipeline exits early when interrupt_event is set between steps
@@ -62,31 +62,31 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Test that pipeline works normally when interrupt_event is None (backward compatible)
     - _Requirements: 2.1, 2.2, 6.4_
 
-- [ ] 5. Extend ProgressManager with aborted trial recording and schedule extension
-  - [ ] 5.1 Add record_trial_aborted method to ProgressManager
+- [x] 5. Extend ProgressManager with aborted trial recording and schedule extension
+  - [x] 5.1 Add record_trial_aborted method to ProgressManager
     - Implement `record_trial_aborted(trial_id, reason, failed_step)` method
     - Record trial entry with status "aborted", reason field, and timestamp
     - Preserve any existing step history for the trial
     - Persist updated state to S3
     - _Requirements: 6.1, 6.4_
 
-  - [ ] 5.2 Add append_to_schedule method to ProgressManager
+  - [x] 5.2 Add append_to_schedule method to ProgressManager
     - Implement `append_to_schedule(trial_identifier, autoscaler)` method
     - Append new trial assignment to the schedule list in progress state
     - Persist updated state to S3 immediately
     - _Requirements: 3.3_
 
-  - [ ] 5.3 Modify is_complete to exclude aborted trials
+  - [x] 5.3 Modify is_complete to exclude aborted trials
     - Update `is_complete()` to skip trials with status "aborted" in their trial_results
     - Only require successful completion for non-aborted trials in the schedule
     - _Requirements: 3.4, 6.2_
 
-  - [ ] 5.4 Modify find_resume_point to skip aborted trials
+  - [x] 5.4 Modify find_resume_point to skip aborted trials
     - Update `find_resume_point()` to skip trials marked as "aborted"
     - Continue to the next pending trial in the schedule (including appended replacements)
     - _Requirements: 6.3_
 
-  - [ ]* 5.5 Write unit tests for ProgressManager extensions
+  - [x]* 5.5 Write unit tests for ProgressManager extensions
     - **Property 7: Aborted trial correctly recorded**
     - **Property 8: Aborted trials excluded from completion evaluation**
     - **Property 11: Resume skips aborted trials**
@@ -98,11 +98,11 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Test `find_resume_point` skips aborted trials and returns next pending
     - _Requirements: 3.3, 3.4, 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Modify ExperimentOrchestrator for spot interruption lifecycle management
-  - [ ] 7.1 Add detector lifecycle and interrupt detection to orchestrator trial loop
+- [x] 7. Modify ExperimentOrchestrator for spot interruption lifecycle management
+  - [x] 7.1 Add detector lifecycle and interrupt detection to orchestrator trial loop
     - Import SpotInterruptionDetector
     - Before each trial, resolve cluster node IPs (from Terraform outputs)
     - Create and start SpotInterruptionDetector with node IPs, SSH key, user, poll interval from config
@@ -110,35 +110,35 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Stop detector after trial completes (success or failure)
     - _Requirements: 1.1_
 
-  - [ ] 7.2 Add spot-interruption-specific handling branch to orchestrator
+  - [x] 7.2 Add spot-interruption-specific handling branch to orchestrator
     - Detect spot interruptions via `result.error_message == "spot-interruption"`
     - Increment consecutive_interruptions counter
     - Call `progress_manager.record_trial_aborted(trial_id, "spot-interruption", failed_step)`
     - Invoke AbortSequence; if `must_halt`, return 1
     - _Requirements: 2.3, 2.4, 5.1, 6.1_
 
-  - [ ] 7.3 Implement retry cap check in orchestrator
+  - [x] 7.3 Implement retry cap check in orchestrator
     - After incrementing consecutive_interruptions, check against `config.spot_max_consecutive_interruptions`
     - If cap > 0 and counter >= cap, log error, persist progress, return 1
     - If cap == 0, skip the check (unlimited retries)
     - _Requirements: 5.3, 5.4, 7.4_
 
-  - [ ] 7.4 Implement schedule replacement for aborted trials
+  - [x] 7.4 Implement schedule replacement for aborted trials
     - Compute new trial identifier: `trial_prefix + zero-padded(len(schedule) + 1)`
     - Call `progress_manager.append_to_schedule(new_trial_id, assignment.autoscaler)`
     - Append new `TrialAssignment` to the in-memory schedule list so the loop iterates over it
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ] 7.5 Implement cooldown wait after spot interruption
+  - [x] 7.5 Implement cooldown wait after spot interruption
     - After abort completes and replacement is appended, sleep for `config.spot_cooldown_seconds`
     - Log remaining cooldown time at periodic intervals (every 60 seconds)
     - _Requirements: 4.1, 4.2, 4.3_
 
-  - [ ] 7.6 Reset consecutive interruption counter on successful trial
+  - [x] 7.6 Reset consecutive interruption counter on successful trial
     - After a trial completes successfully, set `consecutive_interruptions = 0`
     - _Requirements: 5.2_
 
-  - [ ]* 7.7 Write unit tests for orchestrator spot-interruption logic
+  - [x]* 7.7 Write unit tests for orchestrator spot-interruption logic
     - **Property 4: Abort sequence invoked on spot interruption**
     - **Property 5: must_halt propagation**
     - **Property 6: Schedule replacement preserves autoscaler and extends correctly**
@@ -156,7 +156,7 @@ Add spot instance interruption detection and handling to the experiment orchestr
     - Test that consecutive counter resets on success
     - _Requirements: 2.3, 2.4, 3.1, 3.2, 4.1, 5.1, 5.2, 5.3, 5.4, 7.4_
 
-- [ ] 8. Final checkpoint - Ensure all tests pass
+- [x] 8. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

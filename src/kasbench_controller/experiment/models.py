@@ -23,6 +23,7 @@ class TrialResult:
     success: bool
     failed_step: str | None = None
     error_message: str | None = None
+    status: str = "completed"  # "completed", "failed", "aborted"
 
 
 @dataclass

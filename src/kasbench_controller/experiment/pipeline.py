@@ -8,6 +8,7 @@ destroy-infrastructure, upload-logs.
 
 from __future__ import annotations
 
+import threading
 import time
 import traceback
 
@@ -62,6 +63,7 @@ class TrialPipeline:
         abort_sequence: AbortSequence,
         logger: structlog.BoundLogger,
         experiment_logger: ExperimentLogger | None = None,
+        interrupt_event: threading.Event | None = None,
     ) -> None:
         """Initialize the TrialPipeline.
 
@@ -72,6 +74,8 @@ class TrialPipeline:
             abort_sequence: Handles cleanup on step failure.
             logger: Structured logger instance bound with trial context.
             experiment_logger: Optional JSON Lines logger for experiment log file.
+            interrupt_event: Optional threading event for spot interruption signaling.
+                When set, the pipeline will abort execution between steps.
         """
         self._config = config
         self._assignment = assignment
@@ -79,6 +83,7 @@ class TrialPipeline:
         self._abort_sequence = abort_sequence
         self._logger = logger
         self._experiment_logger = experiment_logger
+        self._interrupt_event = interrupt_event
 
     def execute(self, start_from_step: str | None = None) -> TrialResult:
         """Execute the trial pipeline, optionally starting from a specific step.
@@ -93,6 +98,24 @@ class TrialPipeline:
         steps_to_execute = self._resolve_steps(start_from_step)
 
         for step in steps_to_execute:
+            # Check for spot interruption before starting step
+            if self._interrupt_event and self._interrupt_event.is_set():
+                self._logger.warning(
+                    "spot_interruption_detected",
+                    trial_identifier=self._assignment.trial_identifier,
+                    autoscaler=self._assignment.autoscaler,
+                    step=step,
+                    phase="before_step",
+                )
+                return TrialResult(
+                    trial_identifier=self._assignment.trial_identifier,
+                    autoscaler=self._assignment.autoscaler,
+                    success=False,
+                    failed_step=step,
+                    error_message="spot-interruption",
+                    status="aborted",
+                )
+
             self._logger.info(
                 "step_start",
                 trial_identifier=self._assignment.trial_identifier,
@@ -167,6 +190,25 @@ class TrialPipeline:
                 step=step,
                 status="success",
             )
+
+            # Check for spot interruption after step completes
+            # (step history is already preserved above)
+            if self._interrupt_event and self._interrupt_event.is_set():
+                self._logger.warning(
+                    "spot_interruption_detected",
+                    trial_identifier=self._assignment.trial_identifier,
+                    autoscaler=self._assignment.autoscaler,
+                    step=step,
+                    phase="after_step",
+                )
+                return TrialResult(
+                    trial_identifier=self._assignment.trial_identifier,
+                    autoscaler=self._assignment.autoscaler,
+                    success=False,
+                    failed_step=step,
+                    error_message="spot-interruption",
+                    status="aborted",
+                )
 
             self._logger.info(
                 "step_complete",
