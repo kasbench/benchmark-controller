@@ -263,7 +263,7 @@ class TofuRunner:
         log_step(
             self._logger,
             "tofu_command",
-            "success",
+            "info",
             command=" ".join(args),
             cwd=str(self._working_dir),
         )
@@ -297,5 +297,13 @@ class TofuRunner:
                 stderr=result.stderr,
                 return_code=result.returncode,
             )
+
+        log_step(
+            self._logger,
+            "tofu_command",
+            "success",
+            command=" ".join(args),
+            cwd=str(self._working_dir),
+        )
 
         return tofu_result

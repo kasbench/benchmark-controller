@@ -17,6 +17,7 @@ from kasbench_controller.experiment.models import AbortResult
 from kasbench_controller.logging import log_step
 from kasbench_controller.services.destroy_infrastructure_service import (
     run_destroy_infrastructure,
+    _remove_terraform_dir,
 )
 from kasbench_controller.tofu import TofuRunner
 
@@ -122,6 +123,13 @@ class AbortSequence:
                 variables=self._config.variables,
                 run_id=trial_identifier,
                 auto_approve=True,
+            )
+            # Remove .terraform directory to reclaim disk space after successful destroy
+            _remove_terraform_dir(
+                tofu_directory=tofu_directory,
+                trial_id=None,
+                db=None,
+                logger=self._logger,
             )
             log_step(
                 self._logger,

@@ -124,19 +124,14 @@ def run_destroy_infrastructure(
         )
         db.insert_event(trial_id, "tofu_destroy", "Tofu destroy completed successfully")
         log_step(logger, "tofu_destroy", "success", cwd=str(trial_ctx.tofu_directory))
+
+        # Remove .terraform directory to reclaim disk space (~1.7 GB).
+        # This is safe: tofu.destroy() is synchronous and would have raised
+        # TofuError if it failed, so we only reach here on successful destroy.
+        _remove_terraform_dir(trial_ctx.tofu_directory, trial_id, db, logger)
     else:
         db.insert_event(trial_id, "tofu_destroy_skipped", "--no-apply flag set, skipping tofu destroy")
         log_step(logger, "tofu_destroy_skipped", "success", reason="--no-apply flag set")
-
-    # --- Step 7b: Remove .terraform directory to reclaim disk space (~1.7 GB) ---
-    terraform_dir = trial_ctx.tofu_directory / ".terraform"
-    if terraform_dir.exists():
-        shutil.rmtree(terraform_dir)
-        db.insert_event(trial_id, "terraform_dir_removed", f"Removed {terraform_dir}")
-        log_step(logger, "remove_terraform_dir", "success", path=str(terraform_dir))
-    else:
-        log_step(logger, "remove_terraform_dir", "skipped", path=str(terraform_dir),
-                 reason="directory does not exist")
 
     # --- Step 8: Record cleanup_end_time ---
     db.record_cleanup_end_time(trial_id)
@@ -173,3 +168,33 @@ def _ebs_wait_loop(logger: structlog.BoundLogger, duration_seconds: int) -> None
         else:
             log_step(logger, "ebs_wait_done", "info",
                      message="EBS wait complete.")
+
+
+def _remove_terraform_dir(
+    tofu_directory: Path,
+    trial_id: int | None,
+    db: "DatabaseManager | None",
+    logger: structlog.BoundLogger,
+) -> None:
+    """Remove the .terraform subdirectory to reclaim disk space.
+
+    Safe to call only after tofu destroy has completed successfully.
+    The .terraform directory holds downloaded provider binaries (~1.7 GB)
+    that are no longer needed once the infrastructure is destroyed.
+
+    Args:
+        tofu_directory: Path to the benchmark-infrastructure directory.
+        trial_id: Database trial ID (for event logging). May be None if called
+            from a context without DB tracking.
+        db: DatabaseManager instance. May be None if called from abort tier 2.
+        logger: Structured logger instance.
+    """
+    terraform_dir = tofu_directory / ".terraform"
+    if terraform_dir.exists():
+        shutil.rmtree(terraform_dir)
+        if db is not None and trial_id is not None:
+            db.insert_event(trial_id, "terraform_dir_removed", f"Removed {terraform_dir}")
+        log_step(logger, "remove_terraform_dir", "success", path=str(terraform_dir))
+    else:
+        log_step(logger, "remove_terraform_dir", "skipped", path=str(terraform_dir),
+                 reason="directory does not exist")
