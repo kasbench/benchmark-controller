@@ -73,6 +73,11 @@ class SpotInterruptionDetector:
 
     def _poll_loop(self) -> None:
         """Main polling loop, runs in background thread."""
+        self._logger.info(
+            "spot_detector_polling",
+            node_count=len(self._node_ips),
+            poll_interval=self._poll_interval,
+        )
         while not self._stop_event.is_set():
             for node_ip in self._node_ips:
                 if self._stop_event.is_set():

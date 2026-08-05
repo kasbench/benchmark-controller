@@ -202,32 +202,33 @@ class ExperimentOrchestrator:
                 logger=trial_logger,
             )
 
-            # Start spot interruption detector for this trial
-            detector = self._create_detector(assignment, trial_logger)
-            if detector:
-                detector.start()
+            # Create detector factory for the pipeline (detector starts after build-infrastructure)
+            def _make_detector_factory(
+                _assignment: TrialAssignment, _logger: structlog.BoundLogger
+            ):
+                """Create a closure that captures the assignment and logger."""
+                def factory() -> SpotInterruptionDetector | None:
+                    return self._create_detector(_assignment, _logger)
+                return factory
 
-            try:
-                # Create TrialPipeline for this trial
-                pipeline = TrialPipeline(
-                    config=self._config,
-                    assignment=assignment,
-                    progress_manager=progress_manager,
-                    abort_sequence=abort_sequence,
-                    logger=trial_logger,
-                    experiment_logger=experiment_logger,
-                    interrupt_event=detector.interrupt_event if detector else None,
-                )
+            detector_factory = _make_detector_factory(assignment, trial_logger)
 
-                # Determine start_from_step: only for the first trial in resumption
-                current_step = step_name if i == trial_index else None
+            # Create TrialPipeline for this trial
+            pipeline = TrialPipeline(
+                config=self._config,
+                assignment=assignment,
+                progress_manager=progress_manager,
+                abort_sequence=abort_sequence,
+                logger=trial_logger,
+                experiment_logger=experiment_logger,
+                detector_factory=detector_factory,
+            )
 
-                # Execute the trial pipeline
-                result = pipeline.execute(start_from_step=current_step)
-            finally:
-                # Stop detector after trial completes (success or failure)
-                if detector:
-                    detector.stop()
+            # Determine start_from_step: only for the first trial in resumption
+            current_step = step_name if i == trial_index else None
+
+            # Execute the trial pipeline
+            result = pipeline.execute(start_from_step=current_step)
 
             if not result.success and result.error_message == "spot-interruption":
                 # --- Spot interruption handling ---
@@ -451,7 +452,7 @@ class ExperimentOrchestrator:
         """
         node_ips = self._get_node_ips(assignment)
         if not node_ips:
-            logger.debug(
+            logger.info(
                 "spot_detector_skipped",
                 trial_identifier=assignment.trial_identifier,
                 reason="No node IPs available (trial_config.json not found or empty).",
@@ -460,7 +461,7 @@ class ExperimentOrchestrator:
 
         ssh_key_path = self._get_ssh_key_path(assignment)
         if not ssh_key_path:
-            logger.debug(
+            logger.info(
                 "spot_detector_skipped",
                 trial_identifier=assignment.trial_identifier,
                 reason="SSH key file not found.",

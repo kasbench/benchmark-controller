@@ -11,6 +11,7 @@ from __future__ import annotations
 import threading
 import time
 import traceback
+from typing import TYPE_CHECKING, Callable
 
 import structlog
 
@@ -33,6 +34,9 @@ from kasbench_controller.services.destroy_infrastructure_service import (
 )
 from kasbench_controller.services.initialize_runner_service import run_initialize_runner
 from kasbench_controller.services.shutdown_service import run_shutdown
+
+if TYPE_CHECKING:
+    from kasbench_controller.experiment.spot_detector import SpotInterruptionDetector
 
 
 class TrialPipeline:
@@ -63,7 +67,7 @@ class TrialPipeline:
         abort_sequence: AbortSequence,
         logger: structlog.BoundLogger,
         experiment_logger: ExperimentLogger | None = None,
-        interrupt_event: threading.Event | None = None,
+        detector_factory: Callable[[], SpotInterruptionDetector | None] | None = None,
     ) -> None:
         """Initialize the TrialPipeline.
 
@@ -74,8 +78,10 @@ class TrialPipeline:
             abort_sequence: Handles cleanup on step failure.
             logger: Structured logger instance bound with trial context.
             experiment_logger: Optional JSON Lines logger for experiment log file.
-            interrupt_event: Optional threading event for spot interruption signaling.
-                When set, the pipeline will abort execution between steps.
+            detector_factory: Optional callable that creates a SpotInterruptionDetector.
+                Called after build-infrastructure completes (or immediately for resumed
+                trials that start from a later step). Returns None if detector cannot
+                be created.
         """
         self._config = config
         self._assignment = assignment
@@ -83,7 +89,9 @@ class TrialPipeline:
         self._abort_sequence = abort_sequence
         self._logger = logger
         self._experiment_logger = experiment_logger
-        self._interrupt_event = interrupt_event
+        self._detector_factory = detector_factory
+        self._detector: SpotInterruptionDetector | None = None
+        self._interrupt_event: threading.Event | None = None
 
     def execute(self, start_from_step: str | None = None) -> TrialResult:
         """Execute the trial pipeline, optionally starting from a specific step.
@@ -97,6 +105,34 @@ class TrialPipeline:
         """
         steps_to_execute = self._resolve_steps(start_from_step)
 
+        # For resumed trials starting after build-infrastructure, the infra files
+        # already exist, so start the detector immediately.
+        if start_from_step is not None and start_from_step != "build-infrastructure":
+            self._start_detector()
+
+        try:
+            return self._execute_steps(steps_to_execute)
+        finally:
+            self._stop_detector()
+
+    def _start_detector(self) -> None:
+        """Create and start the spot interruption detector via the factory."""
+        if self._detector_factory is None:
+            return
+        detector = self._detector_factory()
+        if detector is not None:
+            detector.start()
+            self._detector = detector
+            self._interrupt_event = detector.interrupt_event
+
+    def _stop_detector(self) -> None:
+        """Stop the spot interruption detector if running."""
+        if self._detector is not None:
+            self._detector.stop()
+            self._detector = None
+
+    def _execute_steps(self, steps_to_execute: list[str]) -> TrialResult:
+        """Execute the given steps sequentially, checking for interrupts."""
         for step in steps_to_execute:
             # Check for spot interruption before starting step
             if self._interrupt_event and self._interrupt_event.is_set():
@@ -190,6 +226,10 @@ class TrialPipeline:
                 step=step,
                 status="success",
             )
+
+            # Start detector after build-infrastructure completes successfully
+            if step == "build-infrastructure" and self._detector is None:
+                self._start_detector()
 
             # Check for spot interruption after step completes
             # (step history is already preserved above)
