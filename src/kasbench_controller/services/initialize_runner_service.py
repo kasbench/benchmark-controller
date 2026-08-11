@@ -95,9 +95,20 @@ def run_initialize_runner(
         dry_run=False,
     )
 
-    # --- Step 5: Docker pull ---
+    # --- Step 5: Docker pull (with retries for transient SSH/network errors) ---
     pull_cmd = f"sudo docker pull kasbench/kasbench-runner:{runner_version}"
-    ssh.execute(pull_cmd, timeout=300)
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            ssh.execute(pull_cmd, timeout=300)
+            break
+        except SSHError as e:
+            if attempt < max_retries:
+                log_step(logger, "docker_pull", "retry",
+                         attempt=attempt, error=str(e))
+                time.sleep(5 * attempt)
+            else:
+                raise
     log_step(logger, "docker_pull", "success",
              image=f"kasbench/kasbench-runner:{runner_version}")
     db.insert_event(trial_id, "docker_pull", f"Pulled kasbench/kasbench-runner:{runner_version}")
