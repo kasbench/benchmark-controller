@@ -341,16 +341,16 @@ class TrialPipeline:
         )
 
     def _step_wait(self) -> None:
-        """Execute the wait step - pause for EBS volume readiness.
+        """Execute the wait step - pause for infrastructure readiness.
 
-        Sleeps for 300 seconds (5 minutes) to allow EBS volumes to become ready.
+        Sleeps for 300 seconds (5 minutes) to allow the infrastructure to become ready.
         """
         wait_seconds = 300
         self._logger.info(
             "wait_start",
             trial_identifier=self._assignment.trial_identifier,
             duration_seconds=wait_seconds,
-            message=f"Waiting {wait_seconds}s for EBS volumes to become ready...",
+            message=f"Waiting {wait_seconds}s for infrastructure to become ready...",
         )
         time.sleep(wait_seconds)
 
