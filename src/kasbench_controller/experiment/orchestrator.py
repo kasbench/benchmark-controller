@@ -488,6 +488,9 @@ class ExperimentOrchestrator:
     ) -> SpotInterruptionDetector | None:
         """Create a SpotInterruptionDetector for the given trial assignment.
 
+        Returns None immediately if spot_enabled is False (on-demand instances
+        don't need interruption monitoring).
+
         Attempts to resolve cluster node IPs from the trial's trial_config.json.
         If the config doesn't exist yet (fresh trial that hasn't built infrastructure),
         returns None. The detector will gracefully handle SSH failures if nodes aren't
@@ -498,8 +501,17 @@ class ExperimentOrchestrator:
             logger: Bound logger for this trial.
 
         Returns:
-            A SpotInterruptionDetector instance, or None if node IPs cannot be resolved.
+            A SpotInterruptionDetector instance, or None if node IPs cannot be resolved
+            or spot is not enabled.
         """
+        if not self._config.spot_enabled:
+            logger.info(
+                "spot_detector_skipped",
+                trial_identifier=assignment.trial_identifier,
+                reason="spot_enabled is False; skipping spot interruption detection.",
+            )
+            return None
+
         node_ips = self._get_node_ips(assignment)
         if not node_ips:
             logger.info(

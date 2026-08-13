@@ -130,6 +130,7 @@ class TrialPipeline:
         if self._detector is not None:
             self._detector.stop()
             self._detector = None
+            self._interrupt_event = None
 
     def _execute_steps(self, steps_to_execute: list[str]) -> TrialResult:
         """Execute the given steps sequentially, checking for interrupts."""
@@ -235,6 +236,12 @@ class TrialPipeline:
             # Start detector after build-infrastructure completes successfully
             if step == "build-infrastructure" and self._detector is None:
                 self._start_detector()
+
+            # Stop detector after benchmark-postprocessing completes.
+            # From shutdown onward, nodes will become unreachable intentionally
+            # and we don't want false-positive spot interruption signals.
+            if step == "benchmark-postprocessing":
+                self._stop_detector()
 
             # Check for spot interruption after step completes
             # (step history is already preserved above)

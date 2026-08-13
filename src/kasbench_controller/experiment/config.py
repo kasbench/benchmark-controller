@@ -36,6 +36,7 @@ class ExperimentConfig:
     rerun_from_failed: bool
     halt_on_error: bool
     # Spot interruption handling
+    spot_enabled: bool = True
     spot_cooldown_seconds: int = 600
     spot_max_consecutive_interruptions: int = 3
     spot_poll_interval_seconds: int = 15

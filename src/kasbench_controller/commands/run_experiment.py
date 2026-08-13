@@ -288,6 +288,14 @@ def run_experiment_cmd(
     )
 
     # Construct ExperimentConfig from validated parameters
+    # Derive spot_enabled from --var spot=... (defaults to True if not specified)
+    spot_enabled = True
+    for var in variables:
+        key, _, val = var.partition("=")
+        if key == "spot" and val.lower() == "false":
+            spot_enabled = False
+            break
+
     config = ExperimentConfig(
         run_identifier=run_identifier,
         trial_prefix=trial_prefix,
@@ -309,6 +317,7 @@ def run_experiment_cmd(
         ebs_wait=ebs_wait,
         rerun_from_failed=rerun_from_failed,
         halt_on_error=halt_on_error,
+        spot_enabled=spot_enabled,
     )
 
     # Instantiate orchestrator and run
