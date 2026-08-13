@@ -117,6 +117,10 @@ def run_benchmark_monitor(
         # Check for terminal states
         if current_status in ("success", "failed"):
             db.record_benchmark_end_time(trial_id)
+            new_status = "SUCCESS" if current_status == "success" else "FAIL"
+            db.update_trial_status(trial_id, new_status)
+            log_step(logger, "update_trial_status", "success",
+                     trial_id=trial_id, status=new_status)
             log_step(logger, "benchmark_monitor_complete", "success",
                      final_status=current_status, elapsed_seconds=elapsed)
             return current_status

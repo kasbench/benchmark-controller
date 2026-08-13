@@ -14,6 +14,7 @@ from pathlib import Path
 
 import structlog
 
+from kasbench_controller.database import DatabaseManager
 from kasbench_controller.experiment.abort import AbortSequence
 from kasbench_controller.experiment.config import ExperimentConfig
 from kasbench_controller.experiment.experiment_logger import ExperimentLogger
@@ -22,6 +23,7 @@ from kasbench_controller.experiment.pipeline import TrialPipeline
 from kasbench_controller.experiment.progress import ProgressManager
 from kasbench_controller.experiment.scheduler import TrialScheduler
 from kasbench_controller.experiment.spot_detector import SpotInterruptionDetector
+from kasbench_controller.s3_uploader import S3Uploader
 from kasbench_controller.services.init_service import run_init
 
 
@@ -248,6 +250,23 @@ class ExperimentOrchestrator:
                     failed_step=result.failed_step,
                 )
 
+                # Update trial status to TERMINATED in the database
+                db = DatabaseManager(
+                    self._config.working_directory
+                    / self._config.run_identifier
+                    / "benchmark.db"
+                )
+                trial_record = db.get_trial_by_identifiers(
+                    self._config.run_identifier, result.trial_identifier
+                )
+                if trial_record is not None:
+                    db.update_trial_status(trial_record["trial_id"], "TERMINATED")
+                    trial_logger.info(
+                        "trial_status_updated",
+                        trial_id=trial_record["trial_id"],
+                        status="TERMINATED",
+                    )
+
                 # Log trial abort to the JSON Lines file
                 experiment_logger.log_trial_aborted(
                     trial_identifier=result.trial_identifier,
@@ -393,6 +412,37 @@ class ExperimentOrchestrator:
             run_identifier=self._config.run_identifier,
         )
         experiment_logger.close()
+
+        # Step 8: Upload benchmark.db to S3
+        db_path = (
+            self._config.working_directory
+            / self._config.run_identifier
+            / "benchmark.db"
+        )
+        if db_path.exists():
+            s3_key = f"{self._config.run_identifier}/benchmark.db"
+            self._logger.info(
+                "uploading_benchmark_db",
+                source=str(db_path),
+                s3_key=s3_key,
+            )
+            uploader = S3Uploader(
+                bucket=self._config.s3_bucket,
+                region=self._config.aws_region,
+            )
+            uploader.upload_file(local_path=db_path, s3_key=s3_key)
+            self._logger.info(
+                "benchmark_db_uploaded",
+                source=str(db_path),
+                destination=f"s3://{self._config.s3_bucket}/{s3_key}",
+            )
+        else:
+            self._logger.warning(
+                "benchmark_db_not_found",
+                expected_path=str(db_path),
+                message="benchmark.db not found; skipping S3 upload.",
+            )
+
         return 0
 
     def _cooldown(self, seconds: int) -> None:

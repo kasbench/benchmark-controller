@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from typing import Callable
 
 import paramiko
 import structlog
+
+# Suppress noisy paramiko INFO messages (connection/auth banners)
+logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+# Number of consecutive SSH failures before treating a node as evicted.
+# With a 15-second poll interval, 3 failures = ~45 seconds of unreachability.
+_DEFAULT_UNREACHABLE_THRESHOLD = 3
 
 
 class SpotInterruptionDetector:
@@ -16,6 +24,14 @@ class SpotInterruptionDetector:
     Polls the instance metadata endpoint on cluster nodes via SSH at a
     configurable interval. When a termination notice is detected, sets
     a threading.Event to signal the pipeline.
+
+    Detection has two mechanisms:
+    1. **Metadata check**: SSH to the node and curl the instance-action endpoint.
+       HTTP 200 means a termination notice is present.
+    2. **Unreachability check**: If SSH to a node fails for multiple consecutive
+       poll cycles (default: 3), the node is considered evicted. This handles the
+       case where AWS terminates the instance without the 2-minute warning being
+       observable (e.g., the instance is already gone by the time we poll).
 
     The detector runs as a daemon thread and is started/stopped by the
     pipeline around the infrastructure-active steps.
@@ -30,16 +46,22 @@ class SpotInterruptionDetector:
         ssh_user: str,
         poll_interval_seconds: int,
         logger: structlog.BoundLogger,
+        unreachable_threshold: int = _DEFAULT_UNREACHABLE_THRESHOLD,
     ) -> None:
         self._node_ips = node_ips
         self._ssh_key_path = ssh_key_path
         self._ssh_user = ssh_user
         self._poll_interval = poll_interval_seconds
         self._logger = logger
+        self._unreachable_threshold = unreachable_threshold
         self._interrupt_event = threading.Event()
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._interrupted_node: str | None = None
+        # Track consecutive SSH failures per node. A node must first succeed
+        # at least once before unreachability detection activates for it.
+        self._consecutive_failures: dict[str, int] = {ip: 0 for ip in node_ips}
+        self._has_ever_succeeded: dict[str, bool] = {ip: False for ip in node_ips}
 
     @property
     def interrupt_event(self) -> threading.Event:
@@ -77,24 +99,61 @@ class SpotInterruptionDetector:
             "spot_detector_polling",
             node_count=len(self._node_ips),
             poll_interval=self._poll_interval,
+            unreachable_threshold=self._unreachable_threshold,
         )
         while not self._stop_event.is_set():
             for node_ip in self._node_ips:
                 if self._stop_event.is_set():
                     return
-                if self._check_node(node_ip):
+                result = self._check_node(node_ip)
+                if result == "interrupted":
                     self._interrupted_node = node_ip
                     self._interrupt_event.set()
                     self._logger.warning(
                         "spot_interruption_detected",
                         node_ip=node_ip,
+                        detection_method="metadata",
                     )
                     return
+                elif result == "unreachable":
+                    self._consecutive_failures[node_ip] += 1
+                    failures = self._consecutive_failures[node_ip]
+                    has_succeeded = self._has_ever_succeeded[node_ip]
+
+                    if has_succeeded and failures >= self._unreachable_threshold:
+                        self._interrupted_node = node_ip
+                        self._interrupt_event.set()
+                        self._logger.warning(
+                            "spot_interruption_detected",
+                            node_ip=node_ip,
+                            detection_method="unreachable",
+                            consecutive_failures=failures,
+                        )
+                        return
+                    else:
+                        self._logger.debug(
+                            "spot_node_unreachable",
+                            node_ip=node_ip,
+                            consecutive_failures=failures,
+                            threshold=self._unreachable_threshold,
+                            has_ever_succeeded=has_succeeded,
+                        )
+                else:
+                    # result == "ok" — node reachable, no termination notice
+                    self._consecutive_failures[node_ip] = 0
+                    self._has_ever_succeeded[node_ip] = True
+
             # Sleep in small increments to allow responsive stop
             self._interruptible_sleep(self._poll_interval)
 
-    def _check_node(self, node_ip: str) -> bool:
-        """Check a single node for spot interruption notice via SSH + curl."""
+    def _check_node(self, node_ip: str) -> str:
+        """Check a single node for spot interruption notice via SSH + curl.
+
+        Returns:
+            "interrupted" - termination notice detected (HTTP 200 from metadata)
+            "unreachable" - SSH connection failed (node may be evicted)
+            "ok" - node reachable, no termination notice
+        """
         try:
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -109,14 +168,16 @@ class SpotInterruptionDetector:
             status_code = stdout.read().decode().strip()
             client.close()
             # HTTP 200 means a termination notice is present
-            return status_code == "200"
+            if status_code == "200":
+                return "interrupted"
+            return "ok"
         except Exception as exc:
             self._logger.debug(
                 "spot_check_failed",
                 node_ip=node_ip,
                 error=str(exc),
             )
-            return False
+            return "unreachable"
 
     def _interruptible_sleep(self, seconds: int) -> None:
         """Sleep in 1-second increments, checking for stop signal."""

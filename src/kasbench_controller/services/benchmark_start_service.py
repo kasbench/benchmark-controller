@@ -94,11 +94,15 @@ def run_benchmark_start(
     )
     log_step(logger, "post_start", "success", endpoint="/start")
 
-    # Step 5: Record benchmark_start_time in database
+    # Step 5: Update trial status to RUNNING
+    db.update_trial_status(trial_id, "RUNNING")
+    log_step(logger, "update_trial_status", "success", trial_id=trial_id, status="RUNNING")
+
+    # Step 6: Record benchmark_start_time in database
     db.record_benchmark_start_time(trial_id)
     log_step(logger, "record_benchmark_start_time", "success", trial_id=trial_id)
 
-    # Step 6: Insert event for benchmark start
+    # Step 7: Insert event for benchmark start
     db.insert_event(
         trial_id=trial_id,
         event_type="benchmark_start",
