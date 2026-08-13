@@ -177,14 +177,19 @@ class TrialPipeline:
                 stderr = getattr(exc, "stderr", None)
                 return_code = getattr(exc, "return_code", None)
 
-                self._logger.error(
-                    "step_failed",
-                    trial_identifier=self._assignment.trial_identifier,
-                    autoscaler=self._assignment.autoscaler,
-                    step=step,
-                    error=error_message,
-                    traceback=tb,
-                )
+                log_kwargs: dict = {
+                    "trial_identifier": self._assignment.trial_identifier,
+                    "autoscaler": self._assignment.autoscaler,
+                    "step": step,
+                    "error": error_message,
+                    "traceback": tb,
+                }
+                if stderr:
+                    log_kwargs["stderr"] = stderr
+                if return_code is not None:
+                    log_kwargs["return_code"] = return_code
+
+                self._logger.error("step_failed", **log_kwargs)
 
                 # Log step failure to JSON Lines file
                 if self._experiment_logger is not None:

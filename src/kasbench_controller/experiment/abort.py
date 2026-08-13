@@ -103,7 +103,6 @@ class AbortSequence:
         # --- Tier 2: Direct tofu destroy from trial's benchmark-infrastructure directory ---
         tofu_directory = (
             self._config.working_directory
-            / "benchmarks"
             / self._config.run_identifier
             / trial_identifier
             / "benchmark-infrastructure"
