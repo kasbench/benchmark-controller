@@ -23,7 +23,7 @@ def run_benchmark_monitor(
     timeout: int,
     logger: structlog.BoundLogger,
     interval: int = 30,
-    verbose: bool = False,
+    verbose: bool = True,
 ) -> str:
     """Execute benchmark-monitor logic. Returns final status ("success" or "failed").
 
