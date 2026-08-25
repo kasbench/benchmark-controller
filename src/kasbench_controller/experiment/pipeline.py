@@ -350,9 +350,9 @@ class TrialPipeline:
     def _step_wait(self) -> None:
         """Execute the wait step - pause for infrastructure readiness.
 
-        Sleeps for 300 seconds (5 minutes) to allow the infrastructure to become ready.
+        Sleeps for 120 seconds (2 minutes) to allow the infrastructure to become ready.
         """
-        wait_seconds = 300
+        wait_seconds = 120
         self._logger.info(
             "wait_start",
             trial_identifier=self._assignment.trial_identifier,
