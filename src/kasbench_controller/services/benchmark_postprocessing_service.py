@@ -15,7 +15,8 @@ from kasbench_controller.models import RunContext, TrialContext, load_trial_conf
 from kasbench_controller.runner_api import RunnerAPIClient
 
 
-EXPORT_TYPES = ["metrics", "metadata", "prometheus/tsdb", "output", "db", "roundtrip", "images"]
+EXPORT_TYPES = ["metrics", "metadata", "prometheus/tsdb", "output", "db", "roundtrip", "images",
+                "logs/globeco"]
 
 
 def run_benchmark_postprocessing(
