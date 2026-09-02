@@ -251,6 +251,18 @@ def validate_role_params(
     default=False,
     help="Stop the experiment at the first trial failure instead of continuing.",
 )
+@click.option(
+    "--max-trial-retries",
+    required=False,
+    type=click.IntRange(min=0),
+    default=3,
+    help=(
+        "Maximum consecutive rerun attempts for a failed (non-spot) trial slot "
+        "before halting the experiment. Failed trials are rerun so each autoscaler "
+        "reaches its target successful-trial count. Set to 0 to retry indefinitely "
+        "(default: 3). Ignored when --halt-on-error is set."
+    ),
+)
 @click.pass_context
 def run_experiment_cmd(
     ctx: click.Context,
@@ -274,6 +286,7 @@ def run_experiment_cmd(
     ebs_wait: int,
     rerun_from_failed: bool,
     halt_on_error: bool,
+    max_trial_retries: int,
 ) -> None:
     """Orchestrate a multi-trial benchmark experiment.
 
@@ -317,6 +330,7 @@ def run_experiment_cmd(
         ebs_wait=ebs_wait,
         rerun_from_failed=rerun_from_failed,
         halt_on_error=halt_on_error,
+        max_trial_retries=max_trial_retries,
         spot_enabled=spot_enabled,
     )
 

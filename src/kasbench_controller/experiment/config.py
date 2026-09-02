@@ -35,6 +35,9 @@ class ExperimentConfig:
     ebs_wait: int
     rerun_from_failed: bool
     halt_on_error: bool
+    # Maximum consecutive rerun attempts for a failed (non-spot) trial slot
+    # before halting the experiment. 0 disables the cap (retry indefinitely).
+    max_trial_retries: int = 3
     # Spot interruption handling
     spot_enabled: bool = True
     spot_cooldown_seconds: int = 600

@@ -174,6 +174,7 @@ class ExperimentOrchestrator:
         # Step 6: Iterate through trials from the resume point
         # Use a while loop so dynamically appended replacement trials are iterated over
         consecutive_interruptions = 0
+        consecutive_failures = 0
         i = trial_index
         while i < len(schedule):
             assignment = schedule[i]
@@ -375,15 +376,61 @@ class ExperimentOrchestrator:
                     )
                     return 1
 
-                # Otherwise continue to next trial
+                # Mark the failed trial as aborted so it is excluded from
+                # completion checks and skipped on resume. A replacement trial
+                # is appended below so the autoscaler still reaches its target
+                # successful-trial count.
+                progress_manager.record_trial_aborted(
+                    trial_id=result.trial_identifier,
+                    reason="trial-failure",
+                    failed_step=result.failed_step,
+                )
+
+                # Track consecutive (non-spot) failures against the retry cap.
+                consecutive_failures += 1
+                max_retries = self._config.max_trial_retries
+                if max_retries > 0 and consecutive_failures >= max_retries:
+                    self._logger.error(
+                        "trial_retry_cap_reached",
+                        run_identifier=self._config.run_identifier,
+                        consecutive_failures=consecutive_failures,
+                        max_trial_retries=max_retries,
+                        failed_trial=result.trial_identifier,
+                        message=(
+                            f"Trial failure retry cap reached "
+                            f"({consecutive_failures}/{max_retries}). "
+                            f"Halting experiment."
+                        ),
+                    )
+                    progress_manager.persist()
+                    return 1
+
+                # Append a replacement trial for the same autoscaler so the
+                # target successful-trial count can still be met.
+                new_trial_id = self._config.trial_prefix + str(
+                    len(schedule) + 1
+                ).zfill(4)
+                progress_manager.append_to_schedule(new_trial_id, assignment.autoscaler)
+                new_assignment = TrialAssignment(
+                    trial_identifier=new_trial_id,
+                    autoscaler=assignment.autoscaler,
+                    sequence_number=len(schedule) + 1,
+                )
+                schedule.append(new_assignment)
+
                 trial_logger.info(
-                    "continuing_after_failure",
+                    "replacement_trial_appended",
                     failed_trial=result.trial_identifier,
-                    message="Continuing to next trial after failure.",
+                    new_trial_id=new_trial_id,
+                    autoscaler=assignment.autoscaler,
+                    schedule_length=len(schedule),
+                    consecutive_failures=consecutive_failures,
+                    message="Appended replacement trial after failure.",
                 )
             else:
                 # --- Trial completed successfully ---
                 consecutive_interruptions = 0
+                consecutive_failures = 0
 
                 trial_logger.info(
                     "trial_complete",
