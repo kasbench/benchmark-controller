@@ -396,6 +396,7 @@ If both tiers fail, the experiment halts to prevent resource leakage. By default
 | `--ebs-wait` | No | EBS volume wait time in seconds (default: `300`) |
 | `--rerun-from-failed` | No | Resume from the first failed step within a trial instead of restarting the trial from the beginning (default: `false`) |
 | `--halt-on-error` | No | Stop the experiment at the first trial failure instead of continuing to the next trial (default: `false`) |
+| `--version` | No | Experiment version label stored in `experiment-progress.json` (default: `v1.0`) |
 
 ### Dry-Run Mode
 

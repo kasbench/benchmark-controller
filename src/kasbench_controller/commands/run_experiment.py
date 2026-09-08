@@ -252,6 +252,14 @@ def validate_role_params(
     help="Stop the experiment at the first trial failure instead of continuing.",
 )
 @click.option(
+    "--version",
+    "version",
+    required=False,
+    type=str,
+    default="v1.0",
+    help="Experiment version label stored in experiment-progress.json (default: v1.0).",
+)
+@click.option(
     "--max-trial-retries",
     required=False,
     type=click.IntRange(min=0),
@@ -287,6 +295,7 @@ def run_experiment_cmd(
     rerun_from_failed: bool,
     halt_on_error: bool,
     max_trial_retries: int,
+    version: str,
 ) -> None:
     """Orchestrate a multi-trial benchmark experiment.
 
@@ -332,6 +341,7 @@ def run_experiment_cmd(
         halt_on_error=halt_on_error,
         max_trial_retries=max_trial_retries,
         spot_enabled=spot_enabled,
+        version=version,
     )
 
     # Instantiate orchestrator and run

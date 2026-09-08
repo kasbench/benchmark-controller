@@ -44,4 +44,4 @@ class ExperimentProgress:
     schedule: list[dict]  # [{trial_identifier, autoscaler}, ...]
     trial_results: list[dict]  # [{trial_identifier, steps: [{step, status, timestamp, error?}]}]
     effective_seed: int
-    version: int = 1
+    version: str = "v1.0"

@@ -56,7 +56,7 @@ def _make_progress_data(trial_results=None) -> dict:
     """Create a progress file JSON structure."""
     config = _make_config()
     return {
-        "version": 1,
+        "version": "v1.0",
         "parameters": ProgressManager._config_to_params(config),
         "effective_seed": 42,
         "schedule": [
@@ -104,7 +104,7 @@ class TestLoadOrCreate:
         result = pm.load_or_create(config, schedule, effective_seed=42)
 
         assert isinstance(result, ExperimentProgress)
-        assert result.version == 1
+        assert result.version == "v1.0"
         assert result.effective_seed == 42
         assert len(result.schedule) == 4
         assert result.trial_results == []

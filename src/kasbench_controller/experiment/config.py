@@ -35,6 +35,8 @@ class ExperimentConfig:
     ebs_wait: int
     rerun_from_failed: bool
     halt_on_error: bool
+    # Experiment version label, stored in experiment-progress.json.
+    version: str = "v1.0"
     # Maximum consecutive rerun attempts for a failed (non-spot) trial slot
     # before halting the experiment. 0 disables the cap (retry indefinitely).
     max_trial_retries: int = 3

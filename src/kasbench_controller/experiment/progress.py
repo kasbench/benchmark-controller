@@ -97,7 +97,7 @@ class ProgressManager:
             ],
             trial_results=[],
             effective_seed=effective_seed,
-            version=1,
+            version=config.version,
         )
         self._progress = progress
         self._upload_progress()
@@ -434,7 +434,7 @@ class ProgressManager:
             schedule=data.get("schedule", []),
             trial_results=data.get("trial_results", []),
             effective_seed=data.get("effective_seed", 0),
-            version=data.get("version", 1),
+            version=data.get("version", "v1.0"),
         )
 
     def _upload_progress(self) -> None:
