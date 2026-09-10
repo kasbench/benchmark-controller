@@ -1,0 +1,27 @@
+# Version control
+.git
+.gitignore
+
+# Python caches / build artifacts
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+
+# Virtual environments (rebuilt inside the image)
+.venv
+
+# Local benchmark data and secrets
+examples/
+*.pem
+
+# Editor / tooling
+.kiro/
+.vscode/
+.idea/
+
+# Docs and specs not needed at build time
+requirements/

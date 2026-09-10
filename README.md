@@ -35,6 +35,8 @@ Bastion Host (Controller)
 - Network access to GitHub (for downloading infrastructure code)
 - SSH access to the Benchmark Runner host (for `initialize-runner`)
 
+Alternatively, run the Controller as a Docker container, which bundles Python, `tofu`, the AWS CLI, and the SSH client. In that case you only need Docker (with `buildx`) plus AWS credentials and network access. See [Run with Docker](#run-with-docker).
+
 ## Installation
 
 ```bash
@@ -48,6 +50,176 @@ uv sync
 # Verify installation
 uv run kasbench --help
 ```
+
+## Run with Docker
+
+The Controller ships with a multi-architecture `Dockerfile` (`linux/amd64` and `linux/arm64`) so you can run experiments without cloning the repo or installing `uv`, `tofu`, and the AWS CLI locally. The image bundles everything the CLI needs at runtime:
+
+- Python 3.13 and the `kasbench` CLI
+- OpenTofu (`tofu`)
+- AWS CLI v2 (`aws`)
+- OpenSSH client (`ssh`/`scp`)
+- `git`
+
+You supply the environment-specific bits (AWS credentials, the SSH key for the Benchmark Runner, and a working directory for artifacts) as bind mounts at run time.
+
+### Build the image
+
+Use `docker buildx` to produce a multi-arch image. For local use, build and load the image for your current architecture:
+
+```bash
+docker buildx build --load -t kasbench-controller:latest .
+```
+
+To build (and push) a multi-arch image for both `amd64` and `aarch64`:
+
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t <registry>/kasbench-controller:latest \
+  --push \
+  .
+```
+
+> `--push` (or `--output`) is required when building more than one platform at once, since the local Docker image store cannot hold a multi-arch manifest. To push to a registry, log in first with `docker login <registry>`.
+
+The tool versions are pinned via build args and can be overridden:
+
+```bash
+docker buildx build --load \
+  --build-arg TOFU_VERSION=1.8.8 \
+  --build-arg AWSCLI_VERSION=2.17.0 \
+  -t kasbench/kasbench-controller:latest .
+```
+
+### Verify the image
+
+```bash
+docker run --rm kasbench/kasbench-controller:latest --help
+```
+
+The container's entrypoint is the `kasbench` CLI, so any subcommand and its flags are passed straight through:
+
+```bash
+docker run --rm kasbench/kasbench-controller:latest run-experiment --help
+```
+
+### Runtime requirements
+
+Because the Controller drives AWS and SSHes into the Benchmark Runner, mount the following into the container:
+
+| Mount | Purpose |
+|-------|---------|
+| `~/.aws` → `/root/.aws` | AWS credentials and config (or pass `AWS_*` env vars instead) |
+| A host directory → `/data/benchmarks` | Working directory where trial artifacts and the SQLite database are written |
+
+The image declares `/data/benchmarks` as a conventional mount point (a `VOLUME`). Mount your host directory there and pass `--working-directory /data/benchmarks` on the command line so trial artifacts and the SQLite database persist on the host.
+
+If you use static credentials instead of a mounted `~/.aws`, pass them as environment variables:
+
+```bash
+docker run --rm \
+  -e AWS_ACCESS_KEY_ID \
+  -e AWS_SECRET_ACCESS_KEY \
+  -e AWS_SESSION_TOKEN \
+  -e AWS_DEFAULT_REGION=us-east-1 \
+  ...
+```
+
+### Run an experiment
+
+This is the containerized equivalent of running `uv run kasbench run-experiment ...` from a clone. It mounts your AWS credentials and a host working directory, then runs the same command and flags:
+
+```bash
+docker run --rm \
+  -e KASBENCH_IMAGE_NAME="kasbench/kasbench-controller" \
+  -e KASBENCH_IMAGE_TAGS="latest" \
+  -e KASBENCH_IMAGE_ID="$(docker inspect --format '{{.Id}}' kasbench/kasbench-controller:latest)" \
+  -v "$HOME/.aws:/root/.aws:ro" \
+  -v "$HOME/data/benchmarks:/data/benchmarks" \
+  kasbench/kasbench-controller:latest \
+  run-experiment \
+  --run-identifier exp-2026-09-09-a \
+  --autoscalers hpa,vpa,keda,none \
+  --trials-per-autoscaler 4 \
+  --run-duration 30 \
+  --working-directory /data/benchmarks \
+  --s3-bucket kasbench-test-20260528-377288663341-us-east-1-an \
+  --trial-prefix trial \
+  --var-file large.tfvars \
+  --var "spot=false" \
+  --auto-approve \
+  --runner-version latest \
+  --health-timeout 6000 \
+  --rollout-timeout 6000 \
+  --version v1.0 \
+  --ebs-wait 120 \
+  --role-params '{"back-office":{"baseLoadIntensity":200,"baseDelayPercentage":25,"spawnRate":10},"portfolio-manager":{"baseLoadIntensity":200,"baseDelayPercentage":25,"spawnRate":10},"trader":{"baseLoadIntensity":200,"baseDelayPercentage":25,"spawnRate":10},"investor":{"baseLoadIntensity":400,"baseDelayPercentage":25,"spawnRate":10}}'
+```
+
+Notes:
+
+- `--working-directory /data/benchmarks` must match the container-side path of your `-v` mount so artifacts and the SQLite database persist on the host.
+- Set the AWS region via `AWS_DEFAULT_REGION` (or the mounted `~/.aws/config`), or pass `--aws-region` to the command.
+- Because `run-experiment` runs for a long time, consider `-d` (detached) plus `docker logs -f <container>`, or drop `--rm` so you can inspect the container afterward.
+- To capture structured logs to the mounted volume, add the global `--log` flag before the subcommand:
+  ```bash
+  docker run --rm -v "$HOME/data/benchmarks:/data/benchmarks" \
+    kasbench-controller:latest \
+    --log /data/benchmarks/experiment.jsonl \
+    run-experiment ...
+  ```
+- The `KASBENCH_IMAGE_*` variables above are optional and let the controller record which image produced a run. See [Image provenance](#image-provenance) for details.
+
+### SSH access to the Benchmark Runner
+
+`initialize-runner` (invoked internally by `run-experiment`) SSHes into the Benchmark Runner using the key pair generated by `build-infrastructure`, which is written into the mounted working directory. Because that key lives on the mounted volume, no additional SSH mount is required for `run-experiment`. If you run `initialize-runner` standalone against infrastructure created outside the container, ensure the trial's `artifacts/<trial>/` key material is present under the mounted working directory.
+
+### Image provenance
+
+A running container cannot determine the name, tags, or ID of the image it was launched from without access to the Docker daemon (the socket or API), because that metadata lives in the daemon, not inside the container. To keep the controller self-contained and avoid mounting the Docker socket, the image identity is **injected as environment variables at `docker run` time** and read by the controller.
+
+The controller reads three variables:
+
+| Environment variable | Example | Description |
+|----------------------|---------|-------------|
+| `KASBENCH_IMAGE_NAME` | `kasbench/kasbench-controller` | Image repository/name |
+| `KASBENCH_IMAGE_TAGS` | `latest,v1.0` | Comma-separated list of tags |
+| `KASBENCH_IMAGE_ID` | `sha256:abc123...` | Image ID (content digest) |
+
+All three are optional and default to empty. When any of them is set, the controller emits a `container_image` log entry at startup so every run records which image produced its results:
+
+```json
+{"image_name": "kasbench/kasbench-controller", "image_tags": ["latest", "v1.0"], "image_id": "sha256:abc123...", "event": "container_image", "timestamp": "2026-09-09T10:30:00Z", "level": "info"}
+```
+
+Populate the variables on the host from `docker inspect`, then pass them into the container. For an image referenced as `kasbench/kasbench-controller:latest`:
+
+```bash
+IMAGE_REF="kasbench/kasbench-controller:latest"
+
+# Name + tag come from the reference you run; ID comes from the daemon.
+IMAGE_NAME="${IMAGE_REF%%:*}"
+IMAGE_TAGS="${IMAGE_REF##*:}"
+IMAGE_ID="$(docker inspect --format '{{.Id}}' "$IMAGE_REF")"
+
+docker run --rm \
+  -e KASBENCH_IMAGE_NAME="$IMAGE_NAME" \
+  -e KASBENCH_IMAGE_TAGS="$IMAGE_TAGS" \
+  -e KASBENCH_IMAGE_ID="$IMAGE_ID" \
+  -v "$HOME/.aws:/root/.aws:ro" \
+  -v "$HOME/data/benchmarks:/data/benchmarks" \
+  "$IMAGE_REF" \
+  run-experiment ...
+```
+
+To capture *all* repo tags the daemon knows for the image (not just the one you ran), read them from `docker inspect` too:
+
+```bash
+IMAGE_TAGS="$(docker inspect --format '{{join .RepoTags ","}}' "$IMAGE_REF")"
+```
+
+Because the values are plain environment variables, no Docker socket mount is required and the controller behaves normally (with empty provenance) when the variables are absent.
 
 ## Usage
 
@@ -514,6 +686,7 @@ src/kasbench_controller/
 ├── output_parser.py        # Tofu JSON output parsing
 ├── logging.py              # Structured logging (structlog)
 ├── models.py               # Domain dataclasses
+├── container_info.py       # Container image provenance from env vars
 ├── exceptions.py           # Custom exception hierarchy
 ├── s3_uploader.py          # S3 artifact upload via AWS CLI
 ├── ssh_executor.py         # Remote command execution via SSH
