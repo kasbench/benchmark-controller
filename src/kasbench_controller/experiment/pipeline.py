@@ -372,6 +372,7 @@ class TrialPipeline:
             rollout_timeout=self._config.rollout_timeout,
             cluster_cidr_range=self._config.cluster_cidr_range,
             logger=self._logger,
+            load_generator_image=self._config.load_generator_image,
         )
 
     def _step_benchmark_start(self) -> None:

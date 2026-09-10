@@ -32,6 +32,7 @@ def _make_config(**overrides) -> ExperimentConfig:
         "health_timeout": 30,
         "rollout_timeout": 600,
         "cluster_cidr_range": "10.244.0.0/16",
+        "load_generator_image": "kasbench-load-generator:latest",
         "role_params": None,
         "random_seed": 42,
         "ebs_wait": 300,
@@ -716,7 +717,8 @@ class TestConfigToParams:
             "trials_per_autoscaler", "run_duration", "working_directory",
             "s3_bucket", "aws_region", "var_files", "variables",
             "auto_approve", "runner_version", "health_timeout",
-            "rollout_timeout", "cluster_cidr_range", "role_params", "ebs_wait",
+            "rollout_timeout", "cluster_cidr_range", "load_generator_image",
+            "role_params", "ebs_wait",
         }
         assert set(params.keys()) == expected_keys
 

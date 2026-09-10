@@ -30,6 +30,7 @@ class ExperimentConfig:
     health_timeout: int
     rollout_timeout: int
     cluster_cidr_range: str
+    load_generator_image: str
     role_params: dict | None
     random_seed: int | None
     ebs_wait: int

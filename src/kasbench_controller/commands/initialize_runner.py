@@ -19,6 +19,7 @@ from kasbench_controller.services.initialize_runner_service import run_initializ
 @click.option("--health-timeout", default=30, type=int, help="Health check polling timeout in seconds")
 @click.option("--rollout-timeout", default=600, type=int, help="Rollout wait timeout in seconds")
 @click.option("--cluster-cidr-range", default=None, type=str, help="Pod network CIDR to pass to the Runner (e.g. 10.244.0.0/16)")
+@click.option("--load-generator-image", default="kasbench-load-generator:latest", type=str, help="Load generator Docker image passed to the Runner")
 @click.pass_context
 def initialize_runner_cmd(
     ctx: click.Context,
@@ -29,6 +30,7 @@ def initialize_runner_cmd(
     health_timeout: int,
     rollout_timeout: int,
     cluster_cidr_range: str | None,
+    load_generator_image: str,
 ) -> None:
     """Initialize the KASBench Runner on the benchmark host."""
     logger = ctx.obj["logger"]
@@ -61,6 +63,7 @@ def initialize_runner_cmd(
             })
             log_dry_run(logger, "initialize_runner", {
                 "endpoint": "/initialize",
+                "loadGeneratorImage": load_generator_image,
             })
             log_dry_run(logger, "rollout_wait", {
                 "timeout": rollout_timeout,
@@ -81,6 +84,7 @@ def initialize_runner_cmd(
             rollout_timeout=rollout_timeout,
             cluster_cidr_range=cluster_cidr_range,
             logger=logger,
+            load_generator_image=load_generator_image,
         )
         sys.exit(0)
 

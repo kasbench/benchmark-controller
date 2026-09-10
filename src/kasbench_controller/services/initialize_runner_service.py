@@ -27,6 +27,7 @@ def run_initialize_runner(
     rollout_timeout: int,
     cluster_cidr_range: str | None,
     logger: structlog.BoundLogger,
+    load_generator_image: str = "kasbench-load-generator:latest",
 ) -> None:
     """Execute initialize-runner logic: pull runner image, start container, initialize benchmark.
 
@@ -39,6 +40,8 @@ def run_initialize_runner(
         rollout_timeout: Rollout wait timeout in seconds.
         cluster_cidr_range: Pod network CIDR to pass to the Runner (e.g. 10.244.0.0/16).
         logger: Structured logger instance.
+        load_generator_image: Load generator Docker image passed to the Runner
+            as ``loadGeneratorImage`` (default: kasbench-load-generator:latest).
 
     Raises:
         KasbenchError: On any failure (SSH, Docker, health check, initialization, rollout).
@@ -191,6 +194,7 @@ def run_initialize_runner(
         "globecoPort": trial_config.globeco_port,
         "runIdentifier": run_identifier,
         "trialIdentifier": trial_identifier,
+        "loadGeneratorImage": load_generator_image,
         "runDurationMinutes": trial_config.run_duration,
         "executionDataFs": trial_config.execution_data_fs,
         "skipKubernetesInstall": False,

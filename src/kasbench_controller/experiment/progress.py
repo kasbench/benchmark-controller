@@ -519,6 +519,7 @@ class ProgressManager:
             "health_timeout": config.health_timeout,
             "rollout_timeout": config.rollout_timeout,
             "cluster_cidr_range": config.cluster_cidr_range,
+            "load_generator_image": config.load_generator_image,
             "role_params": config.role_params,
             "ebs_wait": config.ebs_wait,
         }

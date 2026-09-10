@@ -218,6 +218,13 @@ def validate_role_params(
     help="Cluster CIDR range for Flannel networking (default: 10.244.0.0/16).",
 )
 @click.option(
+    "--load-generator-image",
+    required=False,
+    type=str,
+    default="kasbench-load-generator:latest",
+    help="Load generator Docker image passed to the Runner (default: kasbench-load-generator:latest).",
+)
+@click.option(
     "--role-params",
     required=False,
     type=str,
@@ -289,6 +296,7 @@ def run_experiment_cmd(
     health_timeout: int,
     rollout_timeout: int,
     cluster_cidr_range: str,
+    load_generator_image: str,
     role_params: dict | None,
     random_seed: int | None,
     ebs_wait: int,
@@ -334,6 +342,7 @@ def run_experiment_cmd(
         health_timeout=health_timeout,
         rollout_timeout=rollout_timeout,
         cluster_cidr_range=cluster_cidr_range,
+        load_generator_image=load_generator_image,
         role_params=role_params,
         random_seed=random_seed,
         ebs_wait=ebs_wait,
