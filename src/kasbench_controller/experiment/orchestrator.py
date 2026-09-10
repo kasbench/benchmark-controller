@@ -10,9 +10,13 @@ from __future__ import annotations
 import json
 import sys
 import time
+from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 
+import boto3
 import structlog
+from botocore.exceptions import ClientError
 
 from kasbench_controller.database import DatabaseManager
 from kasbench_controller.experiment.abort import AbortSequence
@@ -76,6 +80,13 @@ class ExperimentOrchestrator:
             0 if all trials completed (or experiment was already complete),
             1 if execution was halted due to error.
         """
+        # Step -1: Record the experiment start time and input parameters to S3.
+        # The command-line/parameters file and the start-time file are written
+        # only once for the lifetime of the run so that a restart preserves the
+        # original values.
+        self._record_command_line()
+        self._record_start_time()
+
         # Step 0: Create experiment logger (exits on failure per Req 7.5)
         experiment_logger = ExperimentLogger(
             working_directory=self._config.working_directory,
@@ -490,7 +501,124 @@ class ExperimentOrchestrator:
                 message="benchmark.db not found; skipping S3 upload.",
             )
 
+        # Step 9: Record the experiment end time to S3.
+        self._record_end_time()
+
         return 0
+
+    def _s3_object_exists(self, s3_client, key: str) -> bool:
+        """Return True if the given object already exists in the S3 bucket.
+
+        Args:
+            s3_client: A boto3 S3 client.
+            key: The S3 object key to check.
+
+        Returns:
+            True if the object exists, False if it does not. On any unexpected
+            error, returns False so the caller attempts the write.
+        """
+        try:
+            s3_client.head_object(Bucket=self._config.s3_bucket, Key=key)
+            return True
+        except ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ("NoSuchKey", "NotFound", "404"):
+                return False
+            # Any other error (permissions, etc.): assume it does not exist and
+            # let the subsequent write attempt surface a clearer failure.
+            return False
+
+    def _put_s3_object(self, key: str, body: str, content_type: str) -> None:
+        """Write a string body to S3 at the given key.
+
+        Failures are logged but do not raise, so that recording metadata never
+        aborts the experiment.
+
+        Args:
+            key: The S3 object key.
+            body: The object body as a string.
+            content_type: The MIME content type for the object.
+        """
+        s3_client = boto3.client("s3", region_name=self._config.aws_region)
+        try:
+            s3_client.put_object(
+                Bucket=self._config.s3_bucket,
+                Key=key,
+                Body=body.encode("utf-8"),
+                ContentType=content_type,
+            )
+            self._logger.info(
+                "s3_metadata_written",
+                s3_key=key,
+                destination=f"s3://{self._config.s3_bucket}/{key}",
+            )
+        except (ClientError, Exception) as e:
+            self._logger.warning(
+                "s3_metadata_write_failed",
+                s3_key=key,
+                error=str(e),
+                message=f"Failed to write s3://{self._config.s3_bucket}/{key}.",
+            )
+
+    def _config_to_dict(self) -> dict:
+        """Serialize the full experiment config to a JSON-safe dict.
+
+        Includes every value passed on the run-experiment command line as well
+        as the default values for options that were not explicitly provided
+        (i.e., the fully materialized self._config).
+
+        Returns:
+            A JSON-serializable dictionary of all config fields.
+        """
+        data = asdict(self._config)
+        # Path is not JSON serializable — convert to string.
+        data["working_directory"] = str(self._config.working_directory)
+        return data
+
+    def _record_command_line(self) -> None:
+        """Write all input parameters to S3 as command_line.json.
+
+        Written only once per run: if the file already exists (e.g., on a
+        restart), it is left untouched.
+        """
+        key = f"{self._config.run_identifier}/command_line.json"
+        s3_client = boto3.client("s3", region_name=self._config.aws_region)
+        if self._s3_object_exists(s3_client, key):
+            self._logger.info(
+                "command_line_already_recorded",
+                s3_key=key,
+                message="command_line.json already exists; not overwriting.",
+            )
+            return
+
+        body = json.dumps(self._config_to_dict(), indent=2, sort_keys=True)
+        self._put_s3_object(key, body, "application/json")
+
+    def _record_start_time(self) -> None:
+        """Write the experiment start time to S3 as start_time.txt (UTC).
+
+        Written only once per run so that a restart preserves the original
+        start time.
+        """
+        key = f"{self._config.run_identifier}/start_time.txt"
+        s3_client = boto3.client("s3", region_name=self._config.aws_region)
+        if self._s3_object_exists(s3_client, key):
+            self._logger.info(
+                "start_time_already_recorded",
+                s3_key=key,
+                message="start_time.txt already exists; not overwriting.",
+            )
+            return
+
+        start_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self._put_s3_object(key, start_time, "text/plain")
+
+    def _record_end_time(self) -> None:
+        """Write the experiment end time to S3 as end_time.json (UTC)."""
+        key = f"{self._config.run_identifier}/end_time.json"
+        end_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        body = json.dumps({"end_time": end_time}, indent=2)
+        self._put_s3_object(key, body, "application/json")
 
     def _cooldown(self, seconds: int) -> None:
         """Wait for the specified cooldown period, logging progress periodically.
