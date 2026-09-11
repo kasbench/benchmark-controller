@@ -27,7 +27,7 @@ def run_initialize_runner(
     rollout_timeout: int,
     cluster_cidr_range: str | None,
     logger: structlog.BoundLogger,
-    load_generator_image: str = "kasbench-load-generator:latest",
+    load_generator_image: str = "kasbench/kasbench-load-generator:latest",
 ) -> None:
     """Execute initialize-runner logic: pull runner image, start container, initialize benchmark.
 

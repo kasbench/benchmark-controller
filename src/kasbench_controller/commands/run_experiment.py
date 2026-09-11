@@ -255,7 +255,7 @@ def validate_role_params(
     "--load-generator-image",
     required=False,
     type=str,
-    default="kasbench-load-generator:latest",
+    default="kasbench/kasbench-load-generator:latest",
     help="Load generator Docker image passed to the Runner (default: kasbench-load-generator:latest).",
 )
 @click.option(
