@@ -8,6 +8,7 @@ resumption, parameter validation, and configurable error handling.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from dataclasses import asdict
@@ -86,6 +87,7 @@ class ExperimentOrchestrator:
         # original values.
         self._record_command_line()
         self._record_start_time()
+        self._record_environment_variables()
 
         # Step 0: Create experiment logger (exits on failure per Req 7.5)
         experiment_logger = ExperimentLogger(
@@ -612,6 +614,26 @@ class ExperimentOrchestrator:
 
         start_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         self._put_s3_object(key, start_time, "text/plain")
+
+    def _record_environment_variables(self) -> None:
+        """Write all process environment variables to S3 as environment.json.
+
+        Written to the same location as start_time.txt
+        ({run_identifier}/environment.json). Written only once per run so that
+        a restart preserves the original values.
+        """
+        key = f"{self._config.run_identifier}/environment.json"
+        s3_client = boto3.client("s3", region_name=self._config.aws_region)
+        if self._s3_object_exists(s3_client, key):
+            self._logger.info(
+                "environment_already_recorded",
+                s3_key=key,
+                message="environment.json already exists; not overwriting.",
+            )
+            return
+
+        body = json.dumps(dict(os.environ), indent=2, sort_keys=True)
+        self._put_s3_object(key, body, "application/json")
 
     def _record_end_time(self) -> None:
         """Write the experiment end time to S3 as end_time.txt (UTC)."""
