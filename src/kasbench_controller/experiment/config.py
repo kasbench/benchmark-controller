@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from kasbench_controller.exceptions import ValidationError
@@ -36,6 +36,10 @@ class ExperimentConfig:
     ebs_wait: int
     rerun_from_failed: bool
     halt_on_error: bool
+    # Candidate availability zones. When non-empty, one zone is selected at
+    # random for each trial and passed to build-infrastructure as
+    # availability_zone=<zone>. Empty means the caller did not constrain the AZ.
+    availability_zones: list[str] = field(default_factory=list)
     # Experiment version label, stored in experiment-progress.json.
     version: str = "v1.0"
     # Maximum consecutive rerun attempts for a failed (non-spot) trial slot

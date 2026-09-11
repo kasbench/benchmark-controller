@@ -65,6 +65,27 @@ def validate_autoscalers(ctx: click.Context, param: click.Parameter, value: str)
     return entries
 
 
+def validate_availability_zones(
+    ctx: click.Context, param: click.Parameter, value: str | None
+) -> list[str]:
+    """Validate --availability-zones: comma-separated, each non-empty.
+
+    Returns an empty list when the option is omitted.
+    """
+    if value is None:
+        return []
+
+    entries = [entry.strip() for entry in value.split(",")]
+    entries = [entry for entry in entries if entry]  # Drop empties from stray commas
+
+    if not entries:
+        raise click.BadParameter(
+            "--availability-zones must contain at least one availability zone."
+        )
+
+    return entries
+
+
 def validate_var(ctx: click.Context, param: click.Parameter, value: tuple[str, ...]) -> tuple[str, ...]:
     """Validate --var entries: each must contain = with non-empty key."""
     for var in value:
@@ -168,6 +189,19 @@ def validate_role_params(
     type=str,
     default="us-east-1",
     help="AWS region (default: us-east-1).",
+)
+@click.option(
+    "--availability-zones",
+    "availability_zones",
+    required=False,
+    type=str,
+    default=None,
+    callback=validate_availability_zones,
+    help=(
+        "Comma-separated list of availability zones. When supplied, one zone is "
+        "chosen at random for each trial and passed to build-infrastructure as "
+        "availability_zone=<zone>."
+    ),
 )
 @click.option(
     "--var-file",
@@ -289,6 +323,7 @@ def run_experiment_cmd(
     working_directory: str,
     s3_bucket: str,
     aws_region: str,
+    availability_zones: list[str],
     var_file: tuple[str, ...],
     variables: tuple[str, ...],
     auto_approve: bool,
@@ -335,6 +370,7 @@ def run_experiment_cmd(
         working_directory=Path(working_directory),
         s3_bucket=s3_bucket,
         aws_region=aws_region,
+        availability_zones=availability_zones,
         var_files=list(var_file),
         variables=list(variables),
         auto_approve=auto_approve,

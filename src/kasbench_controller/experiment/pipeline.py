@@ -8,6 +8,7 @@ destroy-infrastructure, upload-logs.
 
 from __future__ import annotations
 
+import random
 import threading
 import time
 import traceback
@@ -332,7 +333,23 @@ class TrialPipeline:
             raise ValueError(f"Unknown pipeline step: '{step}'")
 
     def _step_build_infrastructure(self) -> None:
-        """Execute the build-infrastructure step."""
+        """Execute the build-infrastructure step.
+
+        When availability zones are configured, one is selected at random for
+        this trial and appended to the tofu variables as
+        ``availability_zone=<zone>``.
+        """
+        variables = list(self._config.variables)
+        if self._config.availability_zones:
+            selected_zone = random.choice(self._config.availability_zones)
+            variables.append(f"availability_zone={selected_zone}")
+            self._logger.info(
+                "availability_zone_selected",
+                trial_identifier=self._assignment.trial_identifier,
+                availability_zone=selected_zone,
+                candidates=list(self._config.availability_zones),
+            )
+
         run_build_infrastructure(
             working_directory=self._config.working_directory,
             run_identifier=self._config.run_identifier,
@@ -343,7 +360,7 @@ class TrialPipeline:
             run_duration=self._config.run_duration,
             auto_approve=True,
             var_files=self._config.var_files,
-            variables=self._config.variables,
+            variables=variables,
             logger=self._logger,
         )
 

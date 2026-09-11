@@ -533,6 +533,10 @@ Each trial executes the following 10 steps in order:
 
 Autoscaler assignments are randomized across all trials to mitigate temporal ordering effects. For example, with `--autoscalers hpa,vpa --trials-per-autoscaler 3`, the 6 trials will each be assigned an autoscaler (3× hpa, 3× vpa) in a random order. Use `--random-seed` to make the schedule deterministic and reproducible.
 
+**Randomized Availability Zones:**
+
+When `--availability-zones` is supplied (e.g. `--availability-zones us-east-1a,us-east-1b,us-east-1c`), one zone is selected at random for each trial and passed to `build-infrastructure` as the tofu variable `availability_zone=<zone>`, alongside any `--var` assignments. This spreads trials across zones to mitigate zone-specific effects. When the option is omitted, no `availability_zone` variable is added and the infrastructure uses its own default.
+
 **Progress Persistence and Resumption:**
 
 Progress is stored to S3 at `{s3-bucket}/{run-identifier}/experiment-progress.json` after each step completes. If the experiment is interrupted, rerunning the same command resumes from the first incomplete trial. Use `--rerun-from-failed` to resume from the specific failed step within a trial rather than restarting the trial from the beginning.
@@ -557,6 +561,7 @@ If both tiers fail, the experiment halts to prevent resource leakage. By default
 | `--s3-bucket` | Yes | S3 bucket for progress persistence and artifact storage |
 | `--trial-prefix` | No | Prefix for trial identifiers (default: `trial`) |
 | `--aws-region` | No | AWS region (default: `us-east-1`) |
+| `--availability-zones` | No | Comma-separated list of availability zones. When supplied, one zone is chosen at random per trial and passed to `build-infrastructure` as the tofu variable `availability_zone=<zone>` (in addition to any `--var` values) |
 | `--var-file` | No | Var-file arguments for tofu (repeatable). Filenames without path separators resolve to `environments/` |
 | `--var` | No | Variable assignment as `key=value` (repeatable) |
 | `--auto-approve` | No | Skip interactive approval for infrastructure operations (default: `false`) |
