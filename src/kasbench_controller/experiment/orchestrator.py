@@ -614,11 +614,10 @@ class ExperimentOrchestrator:
         self._put_s3_object(key, start_time, "text/plain")
 
     def _record_end_time(self) -> None:
-        """Write the experiment end time to S3 as end_time.json (UTC)."""
-        key = f"{self._config.run_identifier}/end_time.json"
+        """Write the experiment end time to S3 as end_time.txt (UTC)."""
+        key = f"{self._config.run_identifier}/end_time.txt"
         end_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        body = json.dumps({"end_time": end_time}, indent=2)
-        self._put_s3_object(key, body, "application/json")
+        self._put_s3_object(key, end_time, "text/plain")
 
     def _cooldown(self, seconds: int) -> None:
         """Wait for the specified cooldown period, logging progress periodically.

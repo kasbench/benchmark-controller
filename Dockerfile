@@ -3,7 +3,14 @@
 ########################################
 # Builder stage: install Python deps with uv
 ########################################
-FROM --platform=$BUILDPLATFORM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+# NOTE: Do NOT pin this to $BUILDPLATFORM. Dependencies like `cryptography`
+# ship compiled native extensions (e.g. _rust.abi3.so). The builder must run
+# under the TARGET platform so the venv gets architecture-correct wheels;
+# otherwise the venv copied into the (per-target) runtime stage is built for
+# the build host's arch and fails at import with:
+#   ImportError: .../_rust.abi3.so: cannot open shared object file
+# Buildx emulates the non-native arch via QEMU when building multi-arch.
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 # Build a self-contained virtualenv at /app/.venv
 ENV UV_COMPILE_BYTECODE=1 \
