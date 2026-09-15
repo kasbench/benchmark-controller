@@ -4,7 +4,9 @@ Extracted from commands/initialize_runner.py so it can be called programmaticall
 by the experiment orchestrator without Click/sys.exit dependencies.
 """
 
+import json
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -15,6 +17,7 @@ from kasbench_controller.exceptions import KasbenchError, SSHError, TimeoutError
 from kasbench_controller.logging import log_step
 from kasbench_controller.models import RunContext, TrialContext, load_trial_config
 from kasbench_controller.runner_api import RunnerAPIClient
+from kasbench_controller.s3_uploader import S3Uploader
 from kasbench_controller.ssh_executor import SSHExecutor
 
 
@@ -157,6 +160,19 @@ def run_initialize_runner(
     log_step(logger, "docker_run", "success", container="kasbench-runner")
     db.insert_event(trial_id, "docker_run", f"Started kasbench-runner container (v{runner_version})")
 
+    # --- Step 7b: Record runner image name and id to S3 (non-fatal) ---
+    # Best-effort: failures here must not abort initialization. We inspect the
+    # runner image on the remote host to capture its fully-qualified name and
+    # image id, then upload the metadata as JSON to S3.
+    _record_runner_image_metadata(
+        ssh=ssh,
+        trial_config=trial_config,
+        run_identifier=run_identifier,
+        trial_identifier=trial_identifier,
+        runner_version=runner_version,
+        logger=logger,
+    )
+
     # --- Step 8: Health check polling ---
     runner_api = RunnerAPIClient(
         base_url=f"http://{trial_config.benchmark_runner_public_ip}:8080",
@@ -250,3 +266,102 @@ def run_initialize_runner(
 
     # --- Done ---
     log_step(logger, "initialize_runner_complete", "success")
+
+
+def _record_runner_image_metadata(
+    ssh: SSHExecutor,
+    trial_config,
+    run_identifier: str,
+    trial_identifier: str,
+    runner_version: str,
+    logger: structlog.BoundLogger,
+) -> None:
+    """Capture the runner image name/id and upload it to S3 as JSON.
+
+    This step is best-effort: any failure is logged in detail but does not
+    raise, so initialization can continue. The metadata is stored at
+    ``{run_id}/{trial_id}/images/kasbench-runner.json`` in the trial's S3
+    bucket.
+
+    Args:
+        ssh: SSH executor connected to the runner host.
+        trial_config: Loaded trial configuration (provides ``s3_bucket`` and
+            ``aws_region``).
+        run_identifier: Identifier for this experimental run.
+        trial_identifier: Identifier for this trial.
+        runner_version: KASBench Runner Docker image version.
+        logger: Structured logger instance.
+    """
+    image_ref = f"kasbench/kasbench-runner:{runner_version}"
+    s3_key = f"{run_identifier}/{trial_identifier}/images/kasbench-runner.json"
+
+    try:
+        # Inspect the image on the remote host. Use a Go template to emit a
+        # compact, parseable line: <image-id>\t<repo-tags-json>
+        inspect_cmd = (
+            "sudo docker image inspect "
+            "--format '{{.Id}}\t{{json .RepoTags}}' "
+            f"{image_ref}"
+        )
+        result = ssh.execute(inspect_cmd, timeout=60)
+        raw_output = result.stdout.strip()
+
+        image_id = ""
+        repo_tags: list[str] = []
+        parts = raw_output.split("\t", 1)
+        if len(parts) == 2:
+            image_id = parts[0].strip()
+            try:
+                parsed_tags = json.loads(parts[1].strip())
+                if isinstance(parsed_tags, list):
+                    repo_tags = parsed_tags
+            except json.JSONDecodeError:
+                # Leave repo_tags empty; image_ref is still recorded below.
+                pass
+        else:
+            image_id = raw_output
+
+        metadata = {
+            "imageName": image_ref,
+            "imageId": image_id,
+            "repoTags": repo_tags,
+            "runIdentifier": run_identifier,
+            "trialIdentifier": trial_identifier,
+        }
+
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".json",
+            prefix="kasbench-runner-image-",
+            delete=False,
+        ) as tmp:
+            json.dump(metadata, tmp, indent=2)
+            tmp_path = Path(tmp.name)
+
+        try:
+            uploader = S3Uploader(
+                bucket=trial_config.s3_bucket,
+                region=trial_config.aws_region,
+                dry_run=False,
+            )
+            upload_result = uploader.upload_file(tmp_path, s3_key)
+            log_step(
+                logger,
+                "record_runner_image",
+                "success",
+                image=image_ref,
+                image_id=image_id,
+                destination=upload_result.destination_uri,
+            )
+        finally:
+            tmp_path.unlink(missing_ok=True)
+    except Exception as exc:  # noqa: BLE001 - best-effort, non-fatal by design
+        log_step(
+            logger,
+            "record_runner_image",
+            "failure",
+            image=image_ref,
+            s3_key=s3_key,
+            error=str(exc),
+            error_type=type(exc).__name__,
+        )
