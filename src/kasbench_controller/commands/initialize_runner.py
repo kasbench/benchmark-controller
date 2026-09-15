@@ -19,7 +19,7 @@ from kasbench_controller.services.initialize_runner_service import run_initializ
 @click.option("--health-timeout", default=30, type=int, help="Health check polling timeout in seconds")
 @click.option("--rollout-timeout", default=600, type=int, help="Rollout wait timeout in seconds")
 @click.option("--cluster-cidr-range", default=None, type=str, help="Pod network CIDR to pass to the Runner (e.g. 10.244.0.0/16)")
-@click.option("--load-generator-image", default="kasbench-load-generator:latest", type=str, help="Load generator Docker image passed to the Runner")
+@click.option("--load-generator-image", default="kasbench/kasbench-load-generator:latest", type=str, help="Load generator Docker image passed to the Runner")
 @click.pass_context
 def initialize_runner_cmd(
     ctx: click.Context,

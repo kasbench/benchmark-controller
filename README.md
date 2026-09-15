@@ -339,7 +339,7 @@ This performs the following steps:
 | `--health-timeout` | No | Health check polling timeout in seconds (default: `30`) |
 | `--rollout-timeout` | No | Rollout wait timeout in seconds (default: `600`) |
 | `--cluster-cidr-range` | No | Pod network CIDR to pass to the Runner (e.g. `10.244.0.0/16`). If omitted, the Runner uses its default. |
-| `--load-generator-image` | No | Load generator Docker image passed to the Runner as `loadGeneratorImage` (default: `kasbench-load-generator:latest`) |
+| `--load-generator-image` | No | Load generator Docker image passed to the Runner as `loadGeneratorImage` (default: `kasbench/kasbench-load-generator:latest`) |
 
 ### Benchmark Start
 
@@ -569,7 +569,7 @@ If both tiers fail, the experiment halts to prevent resource leakage. By default
 | `--health-timeout` | No | Health check timeout in seconds (default: `30`) |
 | `--rollout-timeout` | No | Rollout timeout in seconds (default: `600`) |
 | `--cluster-cidr-range` | No | Cluster CIDR range for Flannel networking (default: `10.244.0.0/16`) |
-| `--load-generator-image` | No | Load generator Docker image passed to the Runner as `loadGeneratorImage` (default: `kasbench-load-generator:latest`) |
+| `--load-generator-image` | No | Load generator Docker image passed to the Runner as `loadGeneratorImage` (default: `kasbench/kasbench-load-generator:latest`) |
 | `--role-params` | No | Per-role load generation overrides as a JSON string. Each role must include `baseLoadIntensity`, `baseDelayPercentage`, and `spawnRate` |
 | `--random-seed` | No | Seed for trial schedule randomization. Deterministic if provided; otherwise uses a non-deterministic source |
 | `--ebs-wait` | No | EBS volume wait time in seconds (default: `300`) |

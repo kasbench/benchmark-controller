@@ -41,7 +41,7 @@ def run_initialize_runner(
         cluster_cidr_range: Pod network CIDR to pass to the Runner (e.g. 10.244.0.0/16).
         logger: Structured logger instance.
         load_generator_image: Load generator Docker image passed to the Runner
-            as ``loadGeneratorImage`` (default: kasbench-load-generator:latest).
+            as ``loadGeneratorImage`` (default: kasbench/kasbench-load-generator:latest).
 
     Raises:
         KasbenchError: On any failure (SSH, Docker, health check, initialization, rollout).
