@@ -16,8 +16,6 @@ from kasbench_controller.logging import configure_logging
 
 _IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
-VALID_AUTOSCALERS = {"hpa", "vpa", "keda", "none"}
-
 
 def validate_run_identifier(ctx: click.Context, param: click.Parameter, value: str) -> str:
     """Validate run-identifier: 1-128 chars, alphanumeric/hyphens/underscores."""
@@ -45,22 +43,13 @@ def validate_trial_prefix(ctx: click.Context, param: click.Parameter, value: str
     return value
 
 
-def validate_autoscalers(ctx: click.Context, param: click.Parameter, value: str) -> list[str]:
-    """Validate autoscalers: comma-separated, each in {"hpa","vpa","keda","none"}, at least one."""
+def parse_autoscalers(ctx: click.Context, param: click.Parameter, value: str) -> list[str]:
+    """Parse autoscalers into a list of entries without validating against a fixed set."""
     entries = [entry.strip() for entry in value.split(",")]
     entries = [entry for entry in entries if entry]  # Remove empty entries from trailing commas
 
     if not entries:
-        raise click.BadParameter(
-            "--autoscalers must contain at least one value from: hpa, vpa, keda, none."
-        )
-
-    for entry in entries:
-        if entry not in VALID_AUTOSCALERS:
-            raise click.BadParameter(
-                f"Invalid autoscaler value '{entry}'. "
-                f"Must be one of: hpa, vpa, keda, none."
-            )
+        raise click.BadParameter("--autoscalers must contain at least one value.")
 
     return entries
 
@@ -156,8 +145,8 @@ def validate_role_params(
     "--autoscalers",
     required=True,
     type=str,
-    callback=validate_autoscalers,
-    help="Comma-separated list of autoscalers to benchmark (hpa, vpa, keda, none).",
+    callback=parse_autoscalers,
+    help="Comma-separated list of autoscalers to benchmark.",
 )
 @click.option(
     "--trials-per-autoscaler",
