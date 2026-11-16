@@ -16,7 +16,7 @@ from kasbench_controller.runner_api import RunnerAPIClient
 
 
 EXPORT_TYPES = ["metrics", "metadata", "prometheus/tsdb", "output", "db", "roundtrip", "images",
-                "logs/globeco"]
+                "logs/globeco", "logs/kube-system"]
 
 
 def run_benchmark_postprocessing(
